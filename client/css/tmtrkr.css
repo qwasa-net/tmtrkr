@@ -1,0 +1,73 @@
+* {
+    font-family: "PT Sans Expert", "Ubuntu", "Tahoma", "Calibri", sans;
+}
+
+html {
+    min-height: 100vh;
+}
+
+h1,
+h1 * {
+    font-family: "PT Mono", "Input Mono", "Roboto", monospace;
+    font-weight: bold;
+    font-variant: small-caps;
+}
+
+h2,
+h2 *,
+h3,
+h3 *,
+h4,
+h4 * {
+    font-family: "PT Sans Caption", "Open Sans", "Verdana", sans;
+    font-weight: bold;
+    font-variant: small-caps;
+}
+
+.records h4,
+.records h4 * {
+    font-size: 100%;
+    font-weight: bold;
+}
+
+.x2 {
+    font-size: 200%;
+}
+
+.x125 {
+    font-size: 120%;
+}
+
+.bg-gray {
+    background-color: #ccccc8 !important;
+    font-weight: normal;
+}
+
+@media print {
+
+    html,
+    body {
+        height: auto;
+        font-size: 11pt;
+        padding: 0;
+        margin: 0;
+    }
+
+    h1,
+    h1 * {
+        font-size: 1.66rem;
+        text-align: end;
+    }
+
+
+    #container {
+        margin: 1em auto;
+        max-width: none;
+    }
+
+    .records table {
+        margin: 0 auto;
+        line-height: 1.05;
+    }
+
+}

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>TmTrkr</title>
+    <link rel="stylesheet" href="css/bootstrap@5.1.3.min.css">
+    <link rel="stylesheet" href="css/tmtrkr.css">
+    <link rel="icon" type="image/x-icon" href="img/tmtrkr.svg">
+</head>
+
+<body>
+    <div class="container" id="container">
+
+        <h1 class="bg-light">#TmTrkr</h1>
+
+        <div id="tmtrkr_app">
+
+            <div class="text-end mt-2 mb-3 d-print-none" id="controlpanel">
+                <div class="row align-items-center justify-content-end mb-1">
+                    <div class="col-auto">
+                        <button class="btn btn-sm btn-link" v-on:click="toggle_locale" v-text="'Locale: ' + locale_name"></button>
+                        <button class="btn btn-sm btn-link" v-on:click="toggle_timezone" v-text="'TZ: ' + timezone_name"></button>
+                        <button class="btn btn-sm btn-link" v-on:click="logout">Log Out (<span v-text="user || 'unknown'"></span>)</button>
+                    </div>
+                </div>
+                <div class="row align-items-center justify-content-end">
+                    <div class="col-auto px-0">
+                        <input name="start" class="form-control" type="date" v-model="filter.start_a">
+                    </div>
+                    <div class="col-auto px-0">
+                        <input name="start" class="form-control" type="date" v-model="filter.start_b">
+                    </div>
+                    <div class="col-auto px-0">
+                        <button class="btn btn-warning" v-on:click="get_records">Update</button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-secondary" v-on:click="print">Print</button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-success" v-on:click="create_record">Add Record</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="my-4 x125" v-if="data">
+                <div v-if="data" class="row">
+                    <strong class="col-2 text-end">User:</strong>
+                    <span v-text="data.user || 'unknown'" class="col-10"></span>
+                </div>
+                <div v-if="data && data.query_start_min" class="row">
+                    <strong class="col-2 text-end">From:</strong>
+                    <span v-text="ts_fmt(data.query_start_min)" class="col-10"></span>
+                </div>
+                <div v-if="data && data.query_start_max" class="row">
+                    <strong class="col-2 text-end">To:</strong>
+                    <span v-text="ts_fmt(data.query_start_max)" class="col-10"></span>
+                </div>
+                <div v-if="data && data.duration" class="row">
+                    <strong class="col-2 text-end">Total:</strong>
+                    <span class="col-10">
+                        <span v-text="duration_fmt(data.duration, true)"></span>
+                        <span v-text="' (' + duration_hours_fmt(data.duration) + 'h)'" class="text-muted"></span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- active record form -->
+            <div v-if="active_record" class="p-5 my-5 mx-0 border bg-white container shadow shadow-large position-fixed top-0">
+                <h3 class="bg-light border-bottom">Record #<span v-text="active_record.id || 'new'"></span></h3>
+                <form action="#" method="post" v-on:submit.stop.prevent="return false;" class="my-5">
+                    <input type="submit" hidden>
+                    <div class="row mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <div class="col-12">
+                            <input name="name" class="form-control" type="text" v-model="active_record.name">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="name" class="form-label">Start (<span v-text="timezone_name"></span>)</label>
+                        <div class="col-3">
+                            <input name="start" class="form-control" type="datetime-local" v-on:change="validate_active_record" v-model="active_record.start_input" step="60">
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('today')">Today</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('now')">Now</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('1200')">12:00</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('-1d')">-1d</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('+1h')">+1h</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('+30m')">+30m</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('-30m')">-30m</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('clear')">×</button>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="name" class="form-label">End</label>
+                        <div class="col-3">
+                            <input name="end" class="form-control" type="datetime-local" v-on:change="validate_active_record" v-model="active_record.end_input" step="60">
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('same', 'end', 'start')">=</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('now', 'end')">Now</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('+1h', 'end')">+1h</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('+30m', 'end')">+30m</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('-30m')">-30m</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('clear', 'end')">×</button>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label class="form-label">Duration</label>
+                        <div class="col-12">
+                            <span v-text="duration_fmt(active_record.duration)"></span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <label for="name" class="form-label">Tags</label>
+                        <div class="col-12">
+                            <input name="tags" class="form-control" type="text" v-on:change="validate_active_record" v-model="active_record.tags">
+                        </div>
+                    </div>
+                    <div class="mt-5 mb-3 bg-light overflow-auto">
+                        <div v-if="active_record.errors" class="mt-0 mb-2 bg-warning">
+                            <p v-text="active_record.errors" class="py-1 px-2 m-0"></p>
+                        </div>
+                        <button class="btn btn-secondary float-start" v-on:click.prevent.stop="close_active_record">Close</button>
+                        <button v-if="active_record.id && !active_record.delete_id" class="btn btn-danger float-start mx-2" v-on:click.prevent.stop="delete_record">Delete</button>
+                        <button v-if="active_record.delete_id" class="btn btn-warning float-start mx-2" v-on:click.prevent.stop="delete_confirmed_record">Confirm Delete?</button>
+                        <button class="btn btn-primary float-end px-5" v-on:click.prevent.stop="save_record" v-text="active_record.id?'Save':'Add'"></button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- list or records -->
+            <div v-for="(records, day) in records_by_day" v-if="records_by_day" class="records mt-0 mb-3">
+                <h4 class="bg-gray p-0 py-1 m-0 border-bottom">
+                    <span v-text="day" class="mx-2"></span>
+                </h4>
+                <table class="table table-sm table-hover table-borderless table-striped">
+                    <tr v-for="record in records" class="m-0 p-0" v-on:click.stop.prevent="edit_record(record)">
+                        <td class="col-2 px-2">
+                            <span v-text="duration_fmt(record.duration)"></span>
+                        </td>
+                        <td class="col-2 px-2">
+                            <span v-text="ts_time_fmt(record.start)"></span>
+                            <span>&ndash;</span>
+                            <span v-if="!record.end">…</span>
+                            <span v-if="record.end" v-text="(ts_date_fmt(record.start)==ts_date_fmt(record.end))?ts_time_fmt(record.end):ts_fmt(record.end)" class="col-md-1"></span>
+                        </td>
+                        <td class="col-auto">
+                            <p v-text="record.name" class="p-0 m-0" v-if="record.name"></p>
+                            <p v-text="'#' + record.tags" class="p-0 m-0" v-if="record.tags"></p>
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+
+        </div>
+
+        <hr class="my-5 d-print-none">
+
+    </div>
+
+    <script src="js/vue@3.2.33.global.prod.js"></script>
+    <script src="js/tmtrkr.js"></script>
+
+</body>
+
+</html>

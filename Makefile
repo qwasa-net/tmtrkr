@@ -4,7 +4,7 @@ PYTHON ?= "${VENV}/bin/python"
 PIP ?= "${VENV}/bin/pip"
 ALEMBIC ?= "${VENV}/bin/alembic"
 FLAKE8 ?= "${VENV}/bin/flake8"
-
+DOCKER ?= DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker
 
 env:  # create vrtual env
 	$(PYTHON_SYSTEM) -m venv $(VENV)
@@ -34,3 +34,13 @@ clean:
 	find ./tmtrkr -iname '*.pyc' -print -delete
 	find ./tmtrkr -iname '*.pyo' -print -delete
 	find ./tmtrkr -iname __pycache__ -print -delete
+
+
+container_build:
+	$(DOCKER) build . -f tmtrkr.dockerfile -t tmtrkr
+
+
+container_run:
+	-mkdir -pv _db
+	$(DOCKER) run --publish 8181:8181 --volume "$$(pwd)/_db:/tmtrkr/db" -ti tmtrkr
+

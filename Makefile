@@ -6,6 +6,9 @@ ALEMBIC ?= "${VENV}/bin/alembic"
 FLAKE8 ?= "${VENV}/bin/flake8"
 DOCKER ?= DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker
 
+tea: env env_dev lint test initdb run
+
+
 env:  # create vrtual env
 	$(PYTHON_SYSTEM) -m venv $(VENV)
 	$(PIP) install -U pip
@@ -30,6 +33,12 @@ lint:
 	$(FLAKE8) --statistics tmtrkr server
 
 
+test: DATABASE_URL ?= $(shell mktemp)
+test:
+	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" $(PYTHON) -u -m unittest -v
+	@rm -v "$(DATABASE_URL)"
+
+
 clean:
 	find ./tmtrkr -iname '*.pyc' -print -delete
 	find ./tmtrkr -iname '*.pyo' -print -delete
@@ -42,5 +51,5 @@ container_build:
 
 container_run:
 	-mkdir -pv _db
-	$(DOCKER) run --publish 8181:8181 --volume "$$(pwd)/_db:/tmtrkr/db" -ti tmtrkr
+	$(DOCKER) run --publish 8181:8181 --volume "$$(pwd)/_db:/tmtrkr/db" --tty --interactive tmtrkr
 

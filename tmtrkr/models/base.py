@@ -1,4 +1,4 @@
-"""Helpers database models."""
+"""Database models mixins and globals."""
 from datetime import datetime
 
 from sqlalchemy import TIMESTAMP, Column

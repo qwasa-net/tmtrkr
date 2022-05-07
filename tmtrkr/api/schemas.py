@@ -58,11 +58,10 @@ class RecordInput(Record):
 class RecordOutput(Record):
     """Record output model (for listing/details requests)."""
 
-    id: Optional[int]
+    id: int
     duration: Optional[float]
     is_deleted: Optional[bool]
     user_id: Optional[int]
-    user: Optional[User]
 
 
 class RecordsOutputList(BaseModel):

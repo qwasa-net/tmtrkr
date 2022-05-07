@@ -36,9 +36,9 @@ class Record(Base, AutoTimestampsMixin):
         """."""
         return (
             f"Record(id={self.id!r}, user={self.user!r}, "
-            f"is_deleted={self.is_deeleted!r}, "
+            f"is_deleted={self.is_deleted!r}, "
             f"start={self.start!r}, end={self.end!r}, "
-            f"name={self.name!r}, tags={self.tags!r}"
+            f"name={self.name!r}, tags={self.tags!r})"
         )
 
     @property
@@ -59,6 +59,4 @@ class Record(Base, AutoTimestampsMixin):
 
     @property
     def _columns_as_dict(self) -> list:
-        return self.__mapper__.c.keys() + [
-            "duration",
-        ]
+        return self.__mapper__.c.keys() + ["duration"]

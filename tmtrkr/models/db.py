@@ -4,17 +4,22 @@ from sqlalchemy.orm import sessionmaker
 
 import tmtrkr.settings
 
-ALL = ["get_db"]
+__all__ = ["db_session", "db_connection"]
 
 engine = create_engine(tmtrkr.settings.DATABASE_URL, connect_args=tmtrkr.settings.DATABASE_CONNECT_ARGS)
 
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-def get_db():
+def db_session():
     """Create a new databse session. Close it after usage."""
-    db = Session()
     try:
+        db = Session()
         yield db
     finally:
         db.close()
+
+
+def db_connection():
+    """Return database connction."""
+    return engine.begin()

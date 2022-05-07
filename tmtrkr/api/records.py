@@ -17,7 +17,7 @@ def get_records(
     limit: int = 1000,
     offset: int = 0,
     user=Depends(get_user),
-    db=Depends(models.get_db),
+    db=Depends(models.db_session),
 ) -> schemas.RecordsOutputList:
     """Get list of records."""
     limit = max(LIMIT_MAX, min(limit, 1))
@@ -53,8 +53,8 @@ def get_records(
     return rsp
 
 
-@api.get("/{record_id}", response_model=schemas.Record)
-def get_record(record_id: int, user=Depends(get_user), db=Depends(models.get_db)):
+@api.get("/{record_id}", response_model=schemas.RecordOutput)
+def get_record(record_id: int, user=Depends(get_user), db=Depends(models.db_session)) -> schemas.RecordOutput:
     """Get record by ID."""
     record = models.Record.first(db, id=record_id, user=user)
     if not record:
@@ -62,36 +62,38 @@ def get_record(record_id: int, user=Depends(get_user), db=Depends(models.get_db)
     return record.as_dict()
 
 
-@api.post("/")
-def create_record(data: schemas.RecordInput, user=Depends(get_user), db=Depends(models.get_db)):
+@api.post("/", response_model=schemas.RecordOutput)
+def create_record(
+    data: schemas.RecordInput, user=Depends(get_user), db=Depends(models.db_session)
+) -> schemas.RecordOutput:
     """Create a new record."""
     record = models.Record(user=user, **data.dict())
     record.save(db)
-    return record
+    return record.as_dict()
 
 
-@api.patch("/{record_id}")
+@api.patch("/{record_id}", response_model=schemas.RecordOutput)
 def update_record(
     record_id: int,
     data: schemas.RecordInput,
     user=Depends(get_user),
-    db=Depends(models.get_db),
-):
+    db=Depends(models.db_session),
+) -> schemas.RecordOutput:
     """Update record."""
     record = models.Record.first(db, id=record_id, user=user)
     if not record:
         raise HTTPException(404)
     record.update(**data.dict())
     record.save(db)
-    return record
+    return record.as_dict()
 
 
-@api.delete("/{record_id}")
-def delete_record(record_id: int, user=Depends(get_user), db=Depends(models.get_db)) -> schemas.Record:
+@api.delete("/{record_id}", response_model=schemas.RecordOutput)
+def delete_record(record_id: int, user=Depends(get_user), db=Depends(models.db_session)) -> schemas.RecordOutput:
     """Mark record as deleted."""
     record = models.Record.first(db, id=record_id, user=user)
     if not record:
         raise HTTPException(404)
     record.is_deleted = True
     record.save(db)
-    return record
+    return record.as_dict()

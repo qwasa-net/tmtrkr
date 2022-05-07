@@ -43,6 +43,10 @@ h4 * {
     font-weight: normal;
 }
 
+#active_record {
+    z-index: 1999;
+}
+
 @media print {
 
     html,

@@ -65,7 +65,7 @@
             </div>
 
             <!-- active record form -->
-            <div v-if="active_record" class="p-5 my-5 mx-0 border bg-white container shadow shadow-large position-fixed top-0">
+            <div v-if="active_record" class="p-5 my-5 mx-0 border bg-white container shadow shadow-large position-fixed top-0" id="active_record">
                 <h3 class="bg-light border-bottom">Record #<span v-text="active_record.id || 'new'"></span></h3>
                 <form action="#" method="post" v-on:submit.stop.prevent="return false;" class="my-5">
                     <input type="submit" hidden>
@@ -101,7 +101,7 @@
                             <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('now', 'end')">Now</button>
                             <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('+1h', 'end')">+1h</button>
                             <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('+30m', 'end')">+30m</button>
-                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('-30m')">-30m</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('-30m', 'end')">-30m</button>
                             <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('clear', 'end')">×</button>
                         </div>
                     </div>

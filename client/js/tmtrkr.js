@@ -198,6 +198,13 @@ const tmtrkr_app = Vue.createApp({
 
         },
 
+        save_as_new_record() {
+            let ac = this.active_record;
+            if (!ac) { return; }
+            ac.id = null;
+            this.save_record();
+        },
+
         active_record_set_tm(tm, field, field2) {
             let ac = this.active_record;
             if (!ac) { return; }

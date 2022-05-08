@@ -1,3 +1,5 @@
+import os
+
 # add your model's MetaData object here for 'autogenerate' support
 import tmtrkr.models
 from sqlalchemy import engine_from_config, pool
@@ -5,6 +7,8 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 
 config = context.config
+if "TMTRKR_DATABASE_URL" in os.environ:
+    config.set_main_option("sqlalchemy.url", os.environ.get("TMTRKR_DATABASE_URL"))
 
 target_metadata = [
     tmtrkr.models.Base.metadata,

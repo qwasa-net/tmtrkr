@@ -1,10 +1,13 @@
-VENV ?= _venv
+BASE_DIR ?= $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+
+VENV ?= $(BASE_DIR)/_venv
 PYTHON_SYSTEM ?= /usr/bin/python3
 PYTHON ?= "${VENV}/bin/python"
 PIP ?= "${VENV}/bin/pip"
 ALEMBIC ?= "${VENV}/bin/alembic"
 FLAKE8 ?= "${VENV}/bin/flake8"
 DOCKER ?= DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker
+
 
 tea: env env_dev lint test initdb run
 
@@ -21,12 +24,21 @@ env_dev: env
 	$(PIP) install -r requirements-dev.txt
 
 
+run: DATABASE_URL ?= $(BASE_DIR)/db.sqlite
 run:  # run demo server
-	PYTHONPATH=. $(PYTHON) server/server.py
+	cd "$(BASE_DIR)"; \
+	PYTHONPATH=.:"$(BASE_DIR)" \
+	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" \
+	$(PYTHON) server/server.py
 
 
+initdb: DATABASE_URL ?= $(BASE_DIR)/db.sqlite
 initdb:  # apply all db migrations
-	$(ALEMBIC) upgrade head
+	cd "$(BASE_DIR)"; \
+	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" \
+	$(ALEMBIC) upgrade head; \
+	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" \
+	$(ALEMBIC) current
 
 
 lint:

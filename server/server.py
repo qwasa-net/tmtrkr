@@ -18,14 +18,14 @@ app.add_middleware(
 )
 
 # Serve static files -- web front-end
-app.mount("/client", StaticFiles(directory="client", html=True), name="client")
+app.mount("/www", StaticFiles(directory="www", html=True), name="www")
 
 
 # Redirect from root to front
 @app.get("/")
 async def main():
     """Simply redirect to index.html page."""
-    return RedirectResponse("/client")
+    return RedirectResponse("/www")
 
 
 if __name__ == "__main__":

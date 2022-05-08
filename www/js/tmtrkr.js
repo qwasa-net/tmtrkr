@@ -57,8 +57,9 @@ const tmtrkr_app = Vue.createApp({
     methods: {
 
         init() {
+            this.timezone_local = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            this.timezone = this.timezone_local;
             this.get_records();
-            this.toggle_timezone();
         },
 
         get_records() {
@@ -177,11 +178,11 @@ const tmtrkr_app = Vue.createApp({
             }
 
             fetch(url, {
-                method: method,
-                cache: 'no-cache',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
+                    method: method,
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                })
                 .then(rsp => {
                     rsp.json().then(data => {
                         if (rsp.ok && data) {
@@ -224,28 +225,19 @@ const tmtrkr_app = Vue.createApp({
                 start.setFullYear(today.getFullYear());
                 start.setSeconds(0);
                 ac[field] = start.valueOf() / 1000;
-            } else if (tm == "1200") {
+            } else if (tm == "noon") {
                 start.setHours(12);
                 start.setMinutes(0);
                 start.setSeconds(0);
                 ac[field] = start.valueOf() / 1000;
-            } else if (tm == "+1h") {
-                ac[field] += 1 * 60 * 60;
-            } else if (tm == "-1h") {
-                ac[field] -= 1 * 60 * 60;
-            } else if (tm == "+1d") {
-                ac[field] += 1 * 24 * 60 * 60;
-            } else if (tm == "-1d") {
-                ac[field] -= 1 * 24 * 60 * 60;
-            } else if (tm == "+30m") {
-                ac[field] += 30 * 60;
-            } else if (tm == "-30m") {
-                ac[field] -= 30 * 60;
-            } else if (tm == "clear") {
-                ac[field] = null;
             } else if (tm == "same") {
                 ac[field] = ac[field2];
+            } else if (tm == "clear") {
+                ac[field] = null;
+            } else if (typeof tm == 'number') {
+                ac[field] += Number(tm);
             }
+
             ac[field + "_input"] = ac[field] && this.ts_yymd(this.ts_date(ac[field]));
 
             this.validate_active_record();
@@ -264,13 +256,13 @@ const tmtrkr_app = Vue.createApp({
             if (this.timezone) {
                 this.timezone = null;
             } else {
-                this.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                this.timezone = this.timezone_local;
             }
         },
 
         toggle_locale() {
             if (!this.locale || !this.locale.length) {
-                this.locale = ["en-US",];
+                this.locale = ["en-US", ];
             } else {
                 this.locale = [];
             }
@@ -342,7 +334,7 @@ const tmtrkr_app = Vue.createApp({
             return dt.toLocaleString(this.locale, options);
         },
 
-        ts_fmt(ts) {
+        ts_fmt(ts, timezone) {
             let options = {
                 // dateStyle: 'short',
                 // timeStyle: 'short',
@@ -353,7 +345,7 @@ const tmtrkr_app = Vue.createApp({
                 hour: 'numeric',
                 minute: 'numeric',
                 timeZoneName: 'short',
-                timeZone: this.timezone || "UTC",
+                timeZone: timezone || this.timezone || "UTC",
                 hour12: false,
             };
             let dt = this.ts_date(ts);

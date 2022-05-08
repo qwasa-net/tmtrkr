@@ -13,6 +13,7 @@ const tmtrkr_app = Vue.createApp({
                 q: null
             },
             timezone: null,
+            timezone_local: null,
             locale: [],
         }
     },
@@ -57,8 +58,11 @@ const tmtrkr_app = Vue.createApp({
     methods: {
 
         init() {
+            this.timezone_local = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            this.timezone_offset = (new Date()).getTimezoneOffset();
+            this.timezone = this.timezone_local;
             this.get_records();
-            this.toggle_timezone();
+            console.log(this.timezone_local, this.timezone_offset);
         },
 
         get_records() {
@@ -67,12 +71,18 @@ const tmtrkr_app = Vue.createApp({
             if (this.filter.start_a) {
                 let start_a_ts = (new Date(this.filter.start_a).getTime() / 1000);
                 start_a_ts += 0 * 60 * 60; // (from 00:00:00)
+                if (this.timezone && this.timezone_offset) {
+                    start_a_ts += this.timezone_offset * 60
+                }
                 qs.start_min = start_a_ts;
             }
 
             if (this.filter.start_b) {
                 let start_b_ts = (new Date(this.filter.start_b).getTime() / 1000);
                 start_b_ts += 24 * 60 * 60 - 1; // (till 23:59:59)
+                if (this.timezone && this.timezone_offset) {
+                    start_b_ts += this.timezone_offset * 60
+                }
                 qs.start_max = start_b_ts;
             }
 
@@ -177,11 +187,11 @@ const tmtrkr_app = Vue.createApp({
             }
 
             fetch(url, {
-                method: method,
-                cache: 'no-cache',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
+                    method: method,
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                })
                 .then(rsp => {
                     rsp.json().then(data => {
                         if (rsp.ok && data) {
@@ -224,29 +234,20 @@ const tmtrkr_app = Vue.createApp({
                 start.setFullYear(today.getFullYear());
                 start.setSeconds(0);
                 ac[field] = start.valueOf() / 1000;
-            } else if (tm == "1200") {
+            } else if (tm == "noon") {
                 start.setHours(12);
                 start.setMinutes(0);
                 start.setSeconds(0);
                 ac[field] = start.valueOf() / 1000;
-            } else if (tm == "+1h") {
-                ac[field] += 1 * 60 * 60;
-            } else if (tm == "-1h") {
-                ac[field] -= 1 * 60 * 60;
-            } else if (tm == "+1d") {
-                ac[field] += 1 * 24 * 60 * 60;
-            } else if (tm == "-1d") {
-                ac[field] -= 1 * 24 * 60 * 60;
-            } else if (tm == "+30m") {
-                ac[field] += 30 * 60;
-            } else if (tm == "-30m") {
-                ac[field] -= 30 * 60;
-            } else if (tm == "clear") {
-                ac[field] = null;
             } else if (tm == "same") {
                 ac[field] = ac[field2];
+            } else if (tm == "clear") {
+                ac[field] = null;
+            } else if (typeof tm == 'number') {
+                ac[field] += Number(tm);
             }
-            ac[field + "_input"] = ac[field] && this.ts_yymd(this.ts_date(ac[field]));
+
+            ac[field + "_input"] = ac[field] && this.ts_yymdhms(this.ts_date(ac[field]));
 
             this.validate_active_record();
 
@@ -257,6 +258,11 @@ const tmtrkr_app = Vue.createApp({
         },
 
         print() {
+            if (this.filter && this.filter.start_a && this.filter.start_b) {
+                let a = this.ts_date(this.filter.start_a);
+                let b = this.ts_date(this.filter.start_b);
+                document.title = `TmTrkr_${this.ts_yymd(a)}-${this.ts_yymd(b)}`;
+            }
             window.print();
         },
 
@@ -264,13 +270,13 @@ const tmtrkr_app = Vue.createApp({
             if (this.timezone) {
                 this.timezone = null;
             } else {
-                this.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                this.timezone = this.timezone_local;
             }
         },
 
         toggle_locale() {
             if (!this.locale || !this.locale.length) {
-                this.locale = ["en-US",];
+                this.locale = ["en-US", ];
             } else {
                 this.locale = [];
             }
@@ -342,7 +348,7 @@ const tmtrkr_app = Vue.createApp({
             return dt.toLocaleString(this.locale, options);
         },
 
-        ts_fmt(ts) {
+        ts_fmt(ts, timezone) {
             let options = {
                 // dateStyle: 'short',
                 // timeStyle: 'short',
@@ -353,7 +359,7 @@ const tmtrkr_app = Vue.createApp({
                 hour: 'numeric',
                 minute: 'numeric',
                 timeZoneName: 'short',
-                timeZone: this.timezone || "UTC",
+                timeZone: timezone || this.timezone || "UTC",
                 hour12: false,
             };
             let dt = this.ts_date(ts);
@@ -366,7 +372,7 @@ const tmtrkr_app = Vue.createApp({
         },
 
         ts_yymd(dt) {
-            let ymd = `${pad0(dt.getFullYear(), 4)}-${pad0((1 + dt.getMonth()))}-${pad0(dt.getDate())}T${pad0(dt.getHours())}:${pad0(dt.getMinutes())}:${pad0(dt.getSeconds())}`;
+            let ymd = `${pad0(dt.getFullYear(), 4)}-${pad0((1 + dt.getMonth()))}-${pad0(dt.getDate())}`;
             return ymd;
         }
 

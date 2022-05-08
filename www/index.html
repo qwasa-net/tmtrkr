@@ -65,61 +65,64 @@
             </div>
 
             <!-- active record form -->
-            <div v-if="active_record" class="p-5 my-5 mx-0 border bg-white container shadow shadow-large position-fixed top-0" id="active_record">
+            <div v-if="active_record" class="p-5 my-5 mx-0 rounded border bg-white container shadow shadow-large position-fixed top-0" id="active_record">
                 <h3 class="bg-light border-bottom">Record #<span v-text="active_record.id || 'new'"></span></h3>
                 <form action="#" method="post" v-on:submit.stop.prevent="return false;" class="my-5">
                     <input type="submit" hidden>
-                    <div class="row mb-3">
-                        <label for="name" class="form-label">Name</label>
+                    <div class="row mb-2">
+                        <label for="name" class="form-label required">Name</label>
                         <div class="col-12">
-                            <input name="name" class="form-control" type="text" v-model="active_record.name">
+                            <input name="name" required class="form-control" type="text" v-model="active_record.name">
                         </div>
                     </div>
-                    <div class="row mb-3">
-                        <label for="name" class="form-label">Start (<span v-text="timezone_name"></span>)</label>
+                    <div class="row mb-2">
+                        <label for="name" class="form-label required">Start (<span v-text="active_record.start?(ts_fmt(active_record.start, 'UTC')):'-'"></span>)</label>
                         <div class="col-3">
-                            <input name="start" class="form-control" type="datetime-local" v-on:change="validate_active_record" v-model="active_record.start_input" step="60">
+                            <input name="start" required class="form-control" type="datetime-local" v-on:change="validate_active_record" v-model="active_record.start_input" v-bind:title="'Timezone: ' + timezone_local" step="60">
                         </div>
-                        <div class="col-6">
+                        <div class="col-9">
                             <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('today')">Today</button>
                             <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('now')">Now</button>
-                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('1200')">12:00</button>
-                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('-1d')">-1d</button>
-                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('+1h')">+1h</button>
-                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('+30m')">+30m</button>
-                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('-30m')">-30m</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('noon')">12:00</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm(600)">+10m</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm(1800)">+30m</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm(3600)">+1h</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm(-1800)">-30m</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm(-3600)">-1h</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm(-86400)">-1d</button>
                             <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('clear')">×</button>
                         </div>
                     </div>
-                    <div class="row mb-3">
-                        <label for="name" class="form-label">End</label>
+                    <div class="row mb-2">
+                        <label for="name" class="form-label">End (<span v-text="active_record.end?(ts_fmt(active_record.end, 'UTC')):'-'"></span>)</label>
                         <div class="col-3">
-                            <input name="end" class="form-control" type="datetime-local" v-on:change="validate_active_record" v-model="active_record.end_input" step="60">
+                            <input name="end" class="form-control" type="datetime-local" v-on:change="validate_active_record" v-model="active_record.end_input" v-bind:title="'Timezone: ' + timezone_local" step="60">
                         </div>
-                        <div class="col-6">
+                        <div class="col-9">
                             <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('same', 'end', 'start')">=</button>
                             <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('now', 'end')">Now</button>
-                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('+1h', 'end')">+1h</button>
-                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('+30m', 'end')">+30m</button>
-                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('-30m', 'end')">-30m</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm(600, 'end')">+10m</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm(1800, 'end')">+30m</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm(3600, 'end')">+1h</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm(-1800, 'end')">-30m</button>
                             <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('clear', 'end')">×</button>
                         </div>
                     </div>
-                    <div class="row mb-3">
+                    <div class="row mb-2">
                         <label class="form-label">Duration</label>
                         <div class="col-12">
                             <span v-text="duration_fmt(active_record.duration)"></span>
                         </div>
                     </div>
-                    <div class="row mb-3">
+                    <div class="row mb-2">
                         <label for="name" class="form-label">Tags</label>
                         <div class="col-12">
                             <input name="tags" class="form-control" type="text" v-on:change="validate_active_record" v-model="active_record.tags">
                         </div>
                     </div>
-                    <div class="mt-5 mb-3 bg-light overflow-auto">
+                    <div class="mt-5 mb-2 bg-light overflow-auto">
                         <div v-if="active_record.errors" class="mt-0 mb-2 bg-warning">
-                            <p v-text="active_record.errors" class="py-1 px-2 m-0"></p>
+                            <p v-text="active_record.errors" class="py-1 px-2 m-0 text-center"></p>
                         </div>
                         <button class="btn btn-secondary float-start" v-on:click.prevent.stop="close_active_record">Close</button>
                         <button v-if="active_record.id && !active_record.delete_id" class="btn btn-danger float-start mx-2" v-on:click.prevent.stop="delete_record">Delete</button>
@@ -148,7 +151,7 @@
                         </td>
                         <td class="col-auto">
                             <p v-text="record.name" class="p-0 m-0" v-if="record.name"></p>
-                            <p v-text="'#' + record.tags" class="p-0 m-0" v-if="record.tags"></p>
+                            <p v-text="'#' + record.tags" class="p-0 m-0 small" v-if="record.tags"></p>
                         </td>
                     </tr>
                 </table>

@@ -49,6 +49,8 @@ def get_records(
         rsp["query_start_min"] = start_min
     if start_max:
         rsp["query_start_max"] = start_max
+    if user:
+        rsp["user"] = user.as_dict()
 
     return rsp
 

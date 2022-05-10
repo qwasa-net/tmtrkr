@@ -20,8 +20,21 @@ class BaseModel:
         return cls.query(session, **kwargs).first()
 
     @classmethod
+    def one(cls, session, **kwargs):
+        return cls.query(session, **kwargs).one_or_none()
+
+    @classmethod
     def all(cls, session, **kwargs):
         return cls.query(session, **kwargs).all()
+
+    @classmethod
+    def get_or_create(cls, session, **kwargs):
+        obj = cls.first(session, **kwargs)
+        if obj:
+            return obj
+        obj = cls(**kwargs)
+        obj.save(session)
+        return obj
 
     def update(self, **kwargs):
         for key in kwargs:

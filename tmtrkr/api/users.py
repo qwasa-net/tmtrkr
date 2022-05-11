@@ -2,6 +2,7 @@
 
 from typing import Optional
 
+import tmtrkr.api.schemas as schemas
 import tmtrkr.models as models
 import tmtrkr.settings as settings
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -21,6 +22,13 @@ async def login():
 async def logout():
     """Decativate auth token."""
     raise HTTPException(status_code=status_code.HTTP_418_IM_A_TEAPOT, detail="Not Implemented")
+
+
+@api.get("/", response_model=schemas.UserList)
+async def users(db=Depends(models.db_session)) -> schemas.UserList:
+    """List all users."""
+    users = models.User.all(db)
+    return {"users": (u.as_dict() for u in users)}
 
 
 def get_user(req: Request, db=Depends(models.db_session)) -> Optional[models.User]:

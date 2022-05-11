@@ -5,6 +5,7 @@ const tmtrkr_app = Vue.createApp({
     data() {
         return {
             user: null,
+            users: null,
             data: null,
             active_record: null,
             filter: {
@@ -61,11 +62,11 @@ const tmtrkr_app = Vue.createApp({
             this.timezone_local = Intl.DateTimeFormat().resolvedOptions().timeZone;
             this.timezone_offset = (new Date()).getTimezoneOffset();
             this.timezone = this.timezone_local;
-            this.get_records();
-            console.log(this.timezone_local, this.timezone_offset);
+            this.update();
         },
 
         update() {
+            this.get_users();
             this.get_records();
         },
 
@@ -271,6 +272,28 @@ const tmtrkr_app = Vue.createApp({
 
         },
 
+        get_users() {
+
+            let url = API_URL + '/users/';
+            fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...this.auth_headers()
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    this.users = data.users;
+                    console.log(this.users);
+                })
+                .catch((error) => {
+                    // alert(error);
+                    console.error('Error:', error);
+                });
+
+        },
+
         logout() {
             this.user = null;
             this.update();
@@ -278,14 +301,17 @@ const tmtrkr_app = Vue.createApp({
 
         login() {
             let username = prompt("Username");
-            this.user = { "username": username, "password": "password" };
+            if (!username) {
+                return;
+            }
+            this.user = { "name": username, "password": "password", "id": 0 };
             this.update();
         },
 
         auth_headers() {
             let headers = {};
-            if (this.user) {
-                headers["Authorization"] = `Basic ${this.user.username}`;
+            if (this.user && this.user.name) {
+                headers["Authorization"] = `Basic ${this.user.name}`;
             }
             return headers;
         },

@@ -76,3 +76,4 @@ class RecordsOutputList(BaseModel):
     end_max: Optional[int]
     query_start_min: Optional[int]
     query_start_max: Optional[int]
+    user: Optional[User]

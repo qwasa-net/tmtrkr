@@ -20,7 +20,8 @@
                     <div class="col-auto">
                         <button class="btn btn-sm btn-link" v-on:click="toggle_locale" v-text="'Locale: ' + locale_name"></button>
                         <button class="btn btn-sm btn-link" v-on:click="toggle_timezone" v-text="'TZ: ' + timezone_name"></button>
-                        <button class="btn btn-sm btn-link" v-on:click="logout">Log Out (<span v-text="user || 'unknown'"></span>)</button>
+                        <button v-if="user" class="btn btn-sm btn-link" v-on:click="logout">Log Out (<span v-text="(user && user.username) || 'unknown'"></span>)</button>
+                        <button v-if="!user" class="btn btn-sm btn-link" v-on:click="login">Login</button>
                     </div>
                 </div>
                 <div class="row align-items-center justify-content-end">
@@ -45,7 +46,7 @@
             <div class="my-4 x125" v-if="data">
                 <div v-if="data" class="row">
                     <strong class="col-2 text-end">User:</strong>
-                    <span v-text="data.user || 'unknown'" class="col-10"></span>
+                    <span v-text="(data.user && data.user.name) || 'unknown'" class="col-10"></span>
                 </div>
                 <div v-if="data && data.query_start_min" class="row">
                     <strong class="col-2 text-end">From:</strong>

@@ -15,8 +15,10 @@ def db_session():
     """Create a new databse session. Close it after usage."""
     try:
         db = Session()
+        # print("yield", db)
         yield db
     finally:
+        # print("close", db)
         db.close()
 
 

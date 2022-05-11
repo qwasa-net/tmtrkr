@@ -65,6 +65,10 @@ const tmtrkr_app = Vue.createApp({
             console.log(this.timezone_local, this.timezone_offset);
         },
 
+        update() {
+            this.get_records();
+        },
+
         get_records() {
 
             let qs = {};
@@ -72,7 +76,7 @@ const tmtrkr_app = Vue.createApp({
                 let start_a_ts = (new Date(this.filter.start_a).getTime() / 1000);
                 start_a_ts += 0 * 60 * 60; // (from 00:00:00)
                 if (this.timezone && this.timezone_offset) {
-                    start_a_ts += this.timezone_offset * 60
+                    start_a_ts += this.timezone_offset * 60;
                 }
                 qs.start_min = start_a_ts;
             }
@@ -81,7 +85,7 @@ const tmtrkr_app = Vue.createApp({
                 let start_b_ts = (new Date(this.filter.start_b).getTime() / 1000);
                 start_b_ts += 24 * 60 * 60 - 1; // (till 23:59:59)
                 if (this.timezone && this.timezone_offset) {
-                    start_b_ts += this.timezone_offset * 60
+                    start_b_ts += this.timezone_offset * 60;
                 }
                 qs.start_max = start_b_ts;
             }
@@ -89,7 +93,13 @@ const tmtrkr_app = Vue.createApp({
             let records_url = API_URL + '/records/';
             let url = records_url + "?" + String(new URLSearchParams(qs));
 
-            fetch(url, { method: 'get' })
+            fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...this.auth_headers()
+                    },
+                })
                 .then(response => response.json())
                 .then(data => {
                     this.data = data;
@@ -135,8 +145,13 @@ const tmtrkr_app = Vue.createApp({
             let ac = this.active_record;
             if (!ac) { return; }
             let url = API_URL + `/records/${ac.delete_id}`;
-            let method = "DELETE";
-            fetch(url, { method: method })
+            fetch(url, {
+                    method: "DELETE",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...this.auth_headers()
+                    },
+                })
                 .then(rsp => {
                     rsp.json().then(data => {
                         if (rsp.ok && data) {
@@ -189,7 +204,10 @@ const tmtrkr_app = Vue.createApp({
             fetch(url, {
                     method: method,
                     cache: 'no-cache',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...this.auth_headers()
+                    },
                     body: JSON.stringify(data)
                 })
                 .then(rsp => {
@@ -254,7 +272,26 @@ const tmtrkr_app = Vue.createApp({
         },
 
         logout() {
-            alert("Not Impelemted");
+            this.user = null;
+            this.update();
+        },
+
+        login() {
+            let username = prompt("Username");
+            this.user = { "username": username, "password": "password" };
+            this.update();
+        },
+
+        auth_headers() {
+            let headers = {};
+            if (this.user) {
+                headers["Authorization"] = `Basic ${this.user.username}`;
+            }
+            return headers;
+        },
+
+        handle_401() {
+            this.user = null;
         },
 
         print() {
@@ -272,6 +309,7 @@ const tmtrkr_app = Vue.createApp({
             } else {
                 this.timezone = this.timezone_local;
             }
+            this.update();
         },
 
         toggle_locale() {

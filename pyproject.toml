@@ -3,3 +3,7 @@ name = "tmtrkr"
 version = "0.0.1"
 description = "TmTrkr"
 readme = "README.md"
+
+[tool.black]
+taget-version = "py39"
+line-length = 120

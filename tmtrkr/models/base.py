@@ -37,9 +37,9 @@ class BaseModel:
         return obj
 
     def update(self, **kwargs):
-        for key in kwargs:
+        for key, value in kwargs.items():
             if key in self._columns_update:
-                setattr(self, key, kwargs[key])
+                setattr(self, key, value)
         return self
 
     def as_dict(self):

@@ -2,12 +2,11 @@
 
 from typing import Optional
 
-import tmtrkr.api.schemas as schemas
-import tmtrkr.models as models
-import tmtrkr.settings as settings
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi import status as status_code
 from fastapi.security.utils import get_authorization_scheme_param
+from tmtrkr import models, settings
+from tmtrkr.api import schemas
 
 api = APIRouter()
 
@@ -25,7 +24,7 @@ async def logout():
 
 
 @api.get("/", response_model=schemas.UserList)
-async def users(db=Depends(models.db_session)) -> schemas.UserList:
+async def get_users(db=Depends(models.db_session)) -> schemas.UserList:
     """List all users."""
     users = models.User.all(db)
     return {"users": (u.as_dict() for u in users)}
@@ -50,7 +49,6 @@ def get_user(req: Request, db=Depends(models.db_session)) -> Optional[models.Use
             user = models.User.get_or_create(db, name=username)
         else:
             user = models.User.first(db, name=username)
-        print(param, username, user)
     if not user and not settings.AUTH_USERS_ALLOW_UNKNOWN:
         raise HTTPException(status_code=status_code.HTTP_401_UNAUTHORIZED, details="Must be logged-in")
     return user

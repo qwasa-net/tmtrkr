@@ -12,6 +12,12 @@ class User(BaseModel):
     name: str
 
 
+class UserList(BaseModel):
+    """User list model."""
+
+    users: List[User]
+
+
 class Record(BaseModel):
     """Record base model."""
 

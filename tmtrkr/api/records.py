@@ -63,7 +63,7 @@ class RecordsQueryParams(CommonQueryParams):
         if self.order_by is None:
             queryset = queryset.order_by(models.Record.start.desc())
         else:
-            raise HTTPException(status_code=status_code.HTTP_418_IM_A_TEAPOT, detail="Not Implemented")
+            raise HTTPException(status_code=status_code.HTTP_501_NOT_IMPLEMENTED)
         return super().apply(queryset)
 
 
@@ -113,7 +113,7 @@ def get_record(
     return record.as_dict()
 
 
-@api.post("/", response_model=schemas.RecordOutput)
+@api.post("/", response_model=schemas.RecordOutput, status_code=status_code.HTTP_201_CREATED)
 def create_record(
     data: schemas.RecordInput,
     user=Depends(get_user),
@@ -125,7 +125,7 @@ def create_record(
     return record.as_dict()
 
 
-@api.patch("/{record_id}", response_model=schemas.RecordOutput)
+@api.patch("/{record_id}", response_model=schemas.RecordOutput, status_code=status_code.HTTP_202_ACCEPTED)
 def update_record(
     record_id: int,
     data: schemas.RecordInput,

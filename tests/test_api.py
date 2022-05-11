@@ -83,15 +83,15 @@ class TestAPIRecords(DataBaseTestMixin, unittest.TestCase):
         """Update record."""
         record = {"name": "record name", "start": 1580551200, "end": 1580562000}
         rsp1 = self.client.post(settings.API_BASE_PREFIX + "/records/", json=record)
-        self.assertIn(rsp1.status_code, [200, 201])
+        self.assertIn(rsp1.status_code, [200, 201, 202])
         posted = rsp1.json()
         posted["name"] = "record updated"
         posted["start"] -= 60 * 60
         posted["end"] += 60 * 60
         rsp2 = self.client.patch(settings.API_BASE_PREFIX + f"/records/{posted['id']}", json=posted)
-        self.assertIn(rsp2.status_code, [200, 201])
+        self.assertIn(rsp2.status_code, [200, 201, 202])
         rsp3 = self.client.get(settings.API_BASE_PREFIX + f"/records/{posted['id']}")
-        self.assertIn(rsp3.status_code, [200, 201])
+        self.assertIn(rsp3.status_code, [200, 201, 202])
         updated = rsp3.json()
         self.assertEqual(updated["name"], "record updated")
         self.assertEqual(updated["duration"], record["end"] - record["start"] + 2 * 60 * 60)

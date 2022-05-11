@@ -14,13 +14,13 @@ api = APIRouter()
 @api.get("/login")
 async def login():
     """Get auth token."""
-    raise HTTPException(status_code=status_code.HTTP_418_IM_A_TEAPOT, detail="Not Implemented")
+    raise HTTPException(status_code=status_code.HTTP_501_NOT_IMPLEMENTED)
 
 
 @api.get("/logout")
 async def logout():
     """Decativate auth token."""
-    raise HTTPException(status_code=status_code.HTTP_418_IM_A_TEAPOT, detail="Not Implemented")
+    raise HTTPException(status_code=status_code.HTTP_501_NOT_IMPLEMENTED)
 
 
 @api.get("/", response_model=schemas.UserList)
@@ -40,7 +40,7 @@ def get_user(req: Request, db=Depends(models.db_session)) -> Optional[models.Use
     auth = req.headers.get("Authorization")
     if not auth:
         if not settings.AUTH_USERS_ALLOW_UNKNOWN:
-            raise HTTPException(status_code=status_code.HTTP_401_UNAUTHORIZED, details="Must be logged-in")
+            raise HTTPException(status_code=status_code.HTTP_401_UNAUTHORIZED)
         return None
     scheme, param = get_authorization_scheme_param(auth)
     if scheme.lower() == "basic" and param:
@@ -50,5 +50,5 @@ def get_user(req: Request, db=Depends(models.db_session)) -> Optional[models.Use
         else:
             user = models.User.first(db, name=username)
     if not user and not settings.AUTH_USERS_ALLOW_UNKNOWN:
-        raise HTTPException(status_code=status_code.HTTP_401_UNAUTHORIZED, details="Must be logged-in")
+        raise HTTPException(status_code=status_code.HTTP_401_UNAUTHORIZED)
     return user

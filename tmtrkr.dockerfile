@@ -9,8 +9,7 @@ WORKDIR /tmtrkr
 COPY --chown=tmtrkr requirements*txt Makefile alembic.ini /tmtrkr/
 COPY --chown=tmtrkr tmtrkr /tmtrkr/tmtrkr
 COPY --chown=tmtrkr alembic /tmtrkr/alembic
-COPY --chown=tmtrkr server /tmtrkr/server
-COPY --chown=tmtrkr client /tmtrkr/client
+COPY --chown=tmtrkr www /tmtrkr/www
 COPY --chown=tmtrkr tests /tmtrkr/tests
 
 ENV PYTHONUNBUFFERED 1
@@ -26,6 +25,6 @@ RUN --mount=type=cache,mode=0755,uid=9999,id=pip-cache,target=/tmtrkr/.cache/pip
     mkdir -pv /tmtrkr/db/ && \
     _venv/bin/alembic --name alembic-container upgrade head
 
-CMD _venv/bin/python server/server.py
+CMD _venv/bin/python tmtrkr/server/server.py
 
 

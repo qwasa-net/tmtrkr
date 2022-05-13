@@ -29,7 +29,7 @@ run:  # run demo server
 	cd "$(BASE_DIR)"; \
 	PYTHONPATH=.:"$(BASE_DIR)" \
 	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" \
-	$(PYTHON) server/server.py
+	$(PYTHON) tmtrkr/server/server.py
 
 
 initdb: DATABASE_URL ?= $(BASE_DIR)/db.sqlite
@@ -42,7 +42,7 @@ initdb:  # apply all db migrations
 
 
 lint:
-	$(FLAKE8) --statistics tmtrkr server
+	$(FLAKE8) --statistics tmtrkr
 
 
 test: DATABASE_URL ?= $(shell mktemp)
@@ -52,8 +52,7 @@ test:
 
 
 clean:
-	find ./tmtrkr -iname '*.pyc' -print -delete
-	find ./tmtrkr -iname '*.pyo' -print -delete
+	find ./tmtrkr -iname '*.py[co]' -print -delete
 	find ./tmtrkr -iname __pycache__ -print -delete
 
 
@@ -65,3 +64,15 @@ container_run:
 	-mkdir -pv _db
 	$(DOCKER) run --publish 8181:8181 --volume "$$(pwd)/_db:/tmtrkr/db" --tty --interactive tmtrkr
 
+
+zipapp_build: ZIPAPP_BUILD_PATH := $(shell mktemp --directory --dry-run)/tmtrkr_app
+zipapp_build: clean
+	mkdir -pv "$(ZIPAPP_BUILD_PATH)"
+	$(PIP) install -r requirements.txt --target "$(ZIPAPP_BUILD_PATH)"
+	# copy app and statics
+	cp -rv tmtrkr "$(ZIPAPP_BUILD_PATH)"
+	cp -rv zipapp/__main__.py "$(ZIPAPP_BUILD_PATH)"
+	cp -rv www "$(ZIPAPP_BUILD_PATH)/tmtrkr/"
+	# build a zippapp
+	$(PYTHON) -m zipapp --compress --output "tmtrkr.pyz" --python $(PYTHON_SYSTEM) "$(ZIPAPP_BUILD_PATH)"
+	# rm -rfv "$(ZIPAPP_BUILD_PATH)

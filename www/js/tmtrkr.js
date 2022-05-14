@@ -106,8 +106,7 @@ const tmtrkr_app = Vue.createApp({
                     this.data = data;
                 })
                 .catch((error) => {
-                    // alert(error);
-                    console.error('Error:', error);
+                    console.error(error);
                 });
 
         },
@@ -124,9 +123,9 @@ const tmtrkr_app = Vue.createApp({
             now.setSeconds(0);
             let now_ts = now.valueOf() / 1000;
             let record = {
-                name: '',
+                name: '…',
                 tags: '',
-                start: now_ts,
+                start: Math.floor(now_ts / (60 * 10)) * 60 * 10,
                 end: null
             };
             this.edit_record(record);
@@ -164,8 +163,7 @@ const tmtrkr_app = Vue.createApp({
                     })
                 })
                 .catch((error) => {
-                    // alert(error); 
-                    console.error('Error:', error);
+                    console.error(error);
                 });
 
         },
@@ -222,7 +220,7 @@ const tmtrkr_app = Vue.createApp({
                     })
                 })
                 .catch((error) => {
-                    console.error('Error:', error);
+                    console.error(error);
                 });
 
         },
@@ -272,6 +270,16 @@ const tmtrkr_app = Vue.createApp({
 
         },
 
+        active_record_scroll_tm(field, event) {
+            let delta_y = Number(event.deltaY) || 0;
+            let shift_key = Boolean(event.shiftKey);
+            let tm = shift_key ? (24 * 60 * 60) : (10 * 60);
+            console.log(field, event, delta_y, shift_key, tm);
+            if (delta_y) {
+                this.active_record_set_tm(Math.sign(delta_y) * tm, field);
+            }
+        },
+
         get_users() {
 
             let url = API_URL + '/users/';
@@ -288,8 +296,7 @@ const tmtrkr_app = Vue.createApp({
                     console.log(this.users);
                 })
                 .catch((error) => {
-                    // alert(error);
-                    console.error('Error:', error);
+                    console.error(error);
                 });
 
         },
@@ -311,7 +318,7 @@ const tmtrkr_app = Vue.createApp({
         auth_headers() {
             let headers = {};
             if (this.user && this.user.name) {
-                headers["Authorization"] = `Basic ${this.user.name}`;
+                headers["X-Forwarded-User"] = this.user.name;
             }
             return headers;
         },

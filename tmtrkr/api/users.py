@@ -37,18 +37,23 @@ def get_user(req: Request, db=Depends(models.db_session)) -> Optional[models.Use
     FIXME: Not Implemented Yet!
     This is just a simple stub -- WITHOUT ANY REAL authorization.
     """
+    forwarded_user = req.headers.get("X-Forwarded-User")
     auth = req.headers.get("Authorization")
-    if not auth:
-        if not settings.AUTH_USERS_ALLOW_UNKNOWN:
-            raise HTTPException(status_code=status_code.HTTP_401_UNAUTHORIZED)
-        return None
-    scheme, param = get_authorization_scheme_param(auth)
-    if scheme.lower() == "basic" and param:
+    scheme, param = get_authorization_scheme_param(auth) if auth else "", ""
+    username, user = None, None
+
+    if settings.AUTH_USERS_ALLOW_XFORWARDED and forwarded_user:
+        username = forwarded_user.strip()
+    elif settings.AUTH_USERS_ALLOW_BASIC and scheme.lower() == "basic" and param:
         username, *_ = param.split()
+
+    if username:
         if settings.AUTH_USERS_AUTO_CREATE:
             user = models.User.get_or_create(db, name=username)
         else:
             user = models.User.first(db, name=username)
+
     if not user and not settings.AUTH_USERS_ALLOW_UNKNOWN:
         raise HTTPException(status_code=status_code.HTTP_401_UNAUTHORIZED)
+
     return user

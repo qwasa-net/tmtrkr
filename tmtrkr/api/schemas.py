@@ -1,5 +1,6 @@
 """API data schemas."""
 import re
+import time
 from typing import List, Optional
 
 from pydantic import BaseModel, root_validator, validator
@@ -83,3 +84,31 @@ class RecordsOutputList(BaseModel):
     query_start_min: Optional[int]
     query_start_max: Optional[int]
     user: Optional[User]
+
+
+class TokenData(BaseModel):
+    """Token data."""
+
+    username: str
+    userid: Optional[int]
+    expire: int = int(time.time() + 60 * 60)
+
+    @validator("username")
+    def name_not_empty(cls, v):
+        """User name must be not empty."""
+        if not v or len(str(v).strip()) == 0:
+            raise ValueError("empty username")
+        return str(v).strip()
+
+    @validator("expire")
+    def not_expired(cls, v):
+        """Must be not expired."""
+        if int(v) < int(time.time()):
+            raise ValueError("token expired")
+        return v
+
+
+class TokenResponse(BaseModel):
+    """JWT token encoded."""
+
+    token: str

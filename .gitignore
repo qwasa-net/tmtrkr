@@ -5,3 +5,7 @@ __pycache__
 *.pyo
 
 db.sqlite
+**/db.sqlite
+
+_kakas
+

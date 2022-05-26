@@ -1,0 +1,8 @@
+{
+    "end_with_newline": true,
+    "indent_level": 0,
+    "preserve_newlines": true,
+    "max_preserve_newlines": 3,
+    "brace_style": "collapse,preserve-inline",
+    "operator_position": "after-newline"
+}

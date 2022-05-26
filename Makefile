@@ -6,6 +6,9 @@ PYTHON ?= "${VENV}/bin/python"
 PIP ?= "${VENV}/bin/pip"
 ALEMBIC ?= "${VENV}/bin/alembic"
 FLAKE8 ?= "${VENV}/bin/flake8"
+FORMATTER_PY ?= "${VENV}/bin/black"
+FORMATTER_WWW_JS ?= "${VENV}/bin/js-beautify" --replace --end-with-newline --brace-style=collapse,preserve-inline
+FORMATTER_WWW_CSS ?= "${VENV}/bin/css-beautify" --replace --end-with-newline
 DOCKER ?= DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker
 
 
@@ -13,7 +16,7 @@ tea: env env_dev lint test initdb run
 
 
 env:  # create vrtual env
-	$(PYTHON_SYSTEM) -m venv $(VENV)
+	[ -e $(PYTHON) ] || $(PYTHON_SYSTEM) -m venv --clear $(VENV) && ls -l $(PYTHON)
 	$(PIP) install -U pip
 	# pip install sqlalchemy alembic fastapi uvicorn
 	$(PIP) install -r requirements.txt
@@ -43,6 +46,13 @@ initdb:  # apply all db migrations
 
 lint:
 	$(FLAKE8) --statistics tmtrkr
+	$(FORMATTER_PY) --check tmtrkr tests
+
+
+format:
+	$(FORMATTER_PY) tmtrkr tests
+	$(FORMATTER_WWW_JS) www/js/tmtrkr.js
+	$(FORMATTER_WWW_CSS) www/css/tmtrkr.css
 
 
 test: DATABASE_URL ?= $(shell mktemp)
@@ -57,12 +67,12 @@ clean:
 
 
 container_build:
-	$(DOCKER) build . -f tmtrkr.dockerfile -t tmtrkr
+	$(DOCKER) build . --file tmtrkr.dockerfile --tag tmtrkr
 
 
 container_run:
 	-mkdir -pv _db
-	$(DOCKER) run --publish 8181:8181 --volume "$$(pwd)/_db:/tmtrkr/db" --tty --interactive tmtrkr
+	$(DOCKER) run --publish 8181:8181 --mount "type=bind,src=$$(pwd)/_db,dst=/tmtrkr/db" --tty --interactive tmtrkr
 
 
 zipapp_build: ZIPAPP_BUILD_PATH := $(shell mktemp --directory --dry-run)/tmtrkr_app

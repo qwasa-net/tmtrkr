@@ -12,10 +12,16 @@ FORMATTER_WWW_CSS ?= "${VENV}/bin/css-beautify" --replace --end-with-newline
 DOCKER ?= DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker
 
 
-tea: env env_dev lint test initdb run
+help:
+	-@echo 'How to `make` it:'
+	-@grep ' \ ##' $(realpath $(firstword $(MAKEFILE_LIST))) | sed 's/^/  - /ig'
 
 
-env:  # create vrtual env
+tea: env env_dev lint test initdb run  ## do magic, start from here
+
+
+env:  ## create vrtual env
+	@$(PYTHON_SYSTEM) --version
 	[ -e $(PYTHON) ] || $(PYTHON_SYSTEM) -m venv --clear $(VENV) && ls -l $(PYTHON)
 	$(PIP) install -U pip
 	# pip install sqlalchemy alembic fastapi uvicorn
@@ -28,7 +34,7 @@ env_dev: env
 
 
 run: DATABASE_URL ?= $(BASE_DIR)/db.sqlite
-run:  # run demo server
+run:  ## run demo server
 	cd "$(BASE_DIR)"; \
 	PYTHONPATH=.:"$(BASE_DIR)" \
 	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" \
@@ -36,7 +42,7 @@ run:  # run demo server
 
 
 initdb: DATABASE_URL ?= $(BASE_DIR)/db.sqlite
-initdb:  # apply all db migrations
+initdb:  ## apply all db migrations
 	cd "$(BASE_DIR)"; \
 	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" \
 	$(ALEMBIC) upgrade head; \
@@ -44,39 +50,50 @@ initdb:  # apply all db migrations
 	$(ALEMBIC) current
 
 
-lint:
+demodb: DATABASE_URL ?= $(BASE_DIR)/db.sqlite
+demodb: initdb  ## create demo db
+	cd "$(BASE_DIR)"; \
+	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" \
+	$(PYTHON) tmtrkr/misc/demodb.py
+
+
+lint:  # run source code linters
 	$(FLAKE8) --statistics tmtrkr
 	$(FORMATTER_PY) --check tmtrkr tests
 
 
-format:
+format:  # run source code formatters
 	$(FORMATTER_PY) tmtrkr tests
 	$(FORMATTER_WWW_JS) www/js/tmtrkr.js
 	$(FORMATTER_WWW_CSS) www/css/tmtrkr.css
 
 
 test: DATABASE_URL ?= $(shell mktemp)
-test:
+test:  # run test
 	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" $(PYTHON) -u -m unittest -v
 	@rm -v "$(DATABASE_URL)"
 
 
-clean:
+clean:  # cleanup python cache
 	find ./tmtrkr -iname '*.py[co]' -print -delete
 	find ./tmtrkr -iname __pycache__ -print -delete
 
 
-container_build:
+container_build:  ## build container
 	$(DOCKER) build . --file tmtrkr.dockerfile --tag tmtrkr
 
 
-container_run:
+container_run:  ## run container
+	-$(DOCKER) run --publish 8181:8181 --rm=true --tty --interactive tmtrkr
+
+
+container_run_db:
 	-mkdir -pv _db
-	$(DOCKER) run --publish 8181:8181 --mount "type=bind,src=$$(pwd)/_db,dst=/tmtrkr/db" --tty --interactive tmtrkr
+	-$(DOCKER) run --publish 8181:8181 --mount "type=bind,src=$$(pwd)/_db,dst=/tmtrkr/db" --rm=true --tty --interactive tmtrkr
 
 
 zipapp_build: ZIPAPP_BUILD_PATH := $(shell mktemp --directory --dry-run)/tmtrkr_app
-zipapp_build: clean
+zipapp_build: clean  ## pack app into .pyz
 	mkdir -pv "$(ZIPAPP_BUILD_PATH)"
 	$(PIP) install -r requirements.txt --target "$(ZIPAPP_BUILD_PATH)"
 	# copy app and statics

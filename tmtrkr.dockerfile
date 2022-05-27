@@ -20,7 +20,8 @@ RUN --mount=type=cache,mode=0755,id=pip-cache,target=/var/pip-cache \
     _venv/bin/pip install --cache-dir /var/pip-cache --upgrade pip && \
     _venv/bin/pip install --cache-dir /var/pip-cache -r requirements.txt && \
     mkdir -pv /tmtrkr/db/ && chmod 777 /tmtrkr/db && \
-    _venv/bin/alembic --name alembic-container upgrade head
+    _venv/bin/alembic --name alembic-container upgrade head && \
+    _venv/bin/python tmtrkr/misc/demodb.py >/dev/null
 
 CMD _venv/bin/alembic --name alembic-container upgrade head && \
     _venv/bin/python tmtrkr/server/server.py

@@ -7,6 +7,8 @@ from tmtrkr import models, settings
 from tmtrkr.api import schemas
 from tmtrkr.api.users import get_user
 
+__all__ = ["api"]
+
 api = APIRouter()
 
 

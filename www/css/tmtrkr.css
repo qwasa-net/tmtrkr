@@ -48,7 +48,7 @@ h4 * {
 }
 
 #controlpanel {
-    background-color: aliceblue;
+    background-color: rgb(220, 230, 240);
 }
 
 @media print {

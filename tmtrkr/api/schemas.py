@@ -87,7 +87,7 @@ class RecordsOutputList(BaseModel):
 
 
 class TokenData(BaseModel):
-    """Token data."""
+    """Access token data."""
 
     username: str
     userid: Optional[int]

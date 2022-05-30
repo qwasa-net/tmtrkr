@@ -1,27 +1,36 @@
 """API for the users (Not fully Implemented Yet)."""
 
+import json
 import time
 from typing import Optional
+from urllib import parse, request
 
 import jwt
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Cookie, Depends, Header, HTTPException
 from fastapi import status as status_code
+from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordBearer
 from tmtrkr import models, settings
 from tmtrkr.api import schemas
+
+__all__ = ["api", "get_user"]
+
 
 api = APIRouter()
 
 
 def get_username(
-    x_forwarded_user: Optional[str] = Header(default=None),
-    token: Optional[str] = Depends(OAuth2PasswordBearer(tokenUrl="", auto_error=False)),
+    x_user: Optional[str] = Header(alias="x-forwarded-user", default=None),
+    auth_token: Optional[str] = Depends(OAuth2PasswordBearer(tokenUrl="", auto_error=False)),
+    cookie_token: Optional[str] = Cookie(alias="token", default=None),
 ) -> Optional[str]:
     """Get username from trusted header or JWT token."""
-    if settings.AUTH_USERS_ALLOW_XFORWARDED and x_forwarded_user:
-        return x_forwarded_user.strip()
-    if settings.AUTH_USERS_ALLOW_JWT and token:
-        return get_username_from_token(token)
+    if settings.AUTH_USERS_ALLOW_XFORWARDED and x_user:
+        return x_user.strip()
+    if settings.AUTH_USERS_ALLOW_JWT and auth_token:
+        return get_username_from_token(auth_token)
+    if settings.AUTH_USERS_ALLOW_JWT and cookie_token:
+        return get_username_from_token(cookie_token)
     return None
 
 
@@ -32,11 +41,14 @@ def get_username_from_token(token: str) -> Optional[str]:
         token = schemas.TokenData(**payload)
         return token.username
     except Exception as x:
-        print("invalid token", x)
+        raise HTTPException(
+            status_code=status_code.HTTP_401_UNAUTHORIZED,
+            detail=f"token error: {repr(x):.256}",
+        )
     return None
 
 
-def create_token(user: models.User) -> str:
+def build_token(user: models.User) -> str:
     """Create active JWT token for the user."""
     token = schemas.TokenData(
         username=user.name,
@@ -88,7 +100,46 @@ async def logout():
 
 
 @api.get("/token", response_model=schemas.TokenResponse)
-async def token(user=Depends(get_user)) -> schemas.TokenResponse:
+async def get_token(user=Depends(get_user)) -> schemas.TokenResponse:
     """Create auth token for logged-in user."""
-    token = create_token(user)
+    token = build_token(user)
     return {"token": token}
+
+
+@api.get("/oauth2-login")
+async def login_oauth2():
+    """Redirect to oAuth2 login form."""
+    if settings.AUTH_OAUTH_LOGIN_URL and settings.AUTH_OAUTH_TOKEN_URL:
+        return RedirectResponse(settings.AUTH_OAUTH_LOGIN_URL)
+    raise HTTPException(status_code=status_code.HTTP_412_PRECONDITION_FAILED)
+
+
+@api.get("/oauth2-authorize")
+def login_oauth2_authorize(code: str, db=Depends(models.db_session)):
+    """Authorize oAuth2, get user info -- create user, set cookie."""
+    # get access token
+    form = {"code": code}
+    form.update(settings.AUTH_OAUTH_TOKEN_URL_FORM)
+    req_token = request.Request(
+        url=settings.AUTH_OAUTH_TOKEN_URL,
+        method="POST",
+        data=parse.urlencode(form).encode(),
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    rsp_token = json.load(request.urlopen(req_token))
+    token = rsp_token.get("access_token")
+    token_type = rsp_token.get("token_type")
+    # get user info
+    req_info = request.Request(
+        url=settings.AUTH_OAUTH_USERINFO_URL,
+        method="GET",
+        headers={"Authorization": f"{token_type} {token}"},
+    )
+    rsp_info = json.load(request.urlopen(req_info))
+    # get or create user, set cookie and redirect to home page
+    email = rsp_info.get("email")
+    user = get_user(username=email, db=db)
+    token = build_token(user)
+    response = RedirectResponse(settings.AUTH_OAUTH_FINAL_URL)
+    response.set_cookie(key="token", value=token)
+    return response

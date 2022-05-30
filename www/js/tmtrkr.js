@@ -109,8 +109,11 @@ const tmtrkr_app = Vue.createApp({
                     rsp.json().then(data => {
                         if (rsp.ok) {
                             this.data = data;
+                            if (data.user && !this.user_active) {
+                                this.user_active = { name: data.user.name };
+                            }
                         } else {
-                            this.status_message = `${rsp.status} ${rsp.statusText}`;
+                            this.status_message = `Get records failed: ${rsp.status} ${rsp.statusText}`;
                         }
                     })
                 })
@@ -171,7 +174,7 @@ const tmtrkr_app = Vue.createApp({
                             this.active_record = null;
                             this.get_records();
                         } else {
-                            this.active_record.errors = `${rsp.status} ${rsp.statusText}: ${JSON.stringify(data || null)}`;
+                            this.active_record.errors = `Delete failed: ${rsp.status} ${rsp.statusText}: ${JSON.stringify(data || null)}`;
                         }
                     })
                 })
@@ -227,7 +230,7 @@ const tmtrkr_app = Vue.createApp({
                             this.active_record = null;
                             this.get_records();
                         } else {
-                            this.active_record.errors = `${rsp.status} ${rsp.statusText}: ${JSON.stringify(data || null)}`;
+                            this.active_record.errors = `Save failed: ${rsp.status} ${rsp.statusText}: ${JSON.stringify(data || null)}`;
                         }
                     })
                 })
@@ -311,6 +314,7 @@ const tmtrkr_app = Vue.createApp({
         user_logout() {
             this.user_active = null;
             this.users.selected = null;
+            document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
             this.update();
         },
 
@@ -353,7 +357,7 @@ const tmtrkr_app = Vue.createApp({
                             this.update();
                         });
                     } else {
-                        this.status_message = `${rsp.status} ${rsp.statusText}`
+                        this.status_message = `Login failed: ${rsp.status} ${rsp.statusText}`
                     }
                 })
                 .catch((error) => {
@@ -378,6 +382,7 @@ const tmtrkr_app = Vue.createApp({
             }
             window.print();
         },
+
         toggle_timezone() {
             if (this.timezone) {
                 this.timezone = null;
@@ -386,6 +391,7 @@ const tmtrkr_app = Vue.createApp({
             }
             this.update();
         },
+
         toggle_locale() {
             if (!this.locale || !this.locale.length) {
                 this.locale = ["en-US", ];

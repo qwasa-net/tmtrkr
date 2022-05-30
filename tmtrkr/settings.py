@@ -1,6 +1,8 @@
 """TmTrkr application settings."""
 import json
 import os
+import random
+import string
 
 # Database settings
 DATABASE_URL = os.environ.get("TMTRKR_DATABASE_URL", "sqlite:///db.sqlite")
@@ -22,6 +24,10 @@ API_PAGE_SIZE_LIMIT = 1000
 
 # API Auth parameters
 AUTH_USERS_ALLOW_XFORWARDED = True
-AUTH_USERS_ALLOW_UNKNOWN = True
-AUTH_USERS_ALLOW_BASIC = True
+AUTH_USERS_ALLOW_JWT = True
+AUTH_USERS_ALLOW_JWT_TTL = 60 * 60
+
+AUTH_USERS_ALLOW_UNKNOWN = False
 AUTH_USERS_AUTO_CREATE = True
+
+SECRET_KEY = os.environ.get("TMTRKR_SECRET_KEY", "".join(random.choices(string.ascii_letters, k=64)))

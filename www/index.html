@@ -11,10 +11,13 @@
 <body>
     <div class="container" id="container">
 
+        <!-- header -->
         <h1 class="bg-light m-0 py-1 border-bottom">#TmTrkr</h1>
 
+        <!-- VueJS app -->
         <div id="tmtrkr_app">
 
+            <!-- control panel -->
             <div class="text-end mb-3 d-print-none py-1 border-radius rounded-bottom border-bottom" id="controlpanel">
 
                 <div class="row align-items-center justify-content-end mx-0 my-2">
@@ -23,18 +26,18 @@
                         <button class="btn btn-sm btn-link" v-on:click="toggle_timezone" v-text="'TZ: ' + timezone_name"></button>
                     </div>
                     <div class="col-auto">|</div>
-                    <div class="col-auto" v-if="user">
-                        <button class="btn btn-sm btn-link" v-on:click="logout">Log Out (<span v-text="(user && user.name) || 'unknown'"></span>)</button>
+                    <div class="col-auto" v-if="user_active">
+                        <button class="btn btn-sm btn-secondary" v-on:click="user_logout">Log Out (<span v-text="(user_active && user_active.name) || 'unknown'"></span>)</button>
                     </div>
-                    <div class="col-auto" v-if="!user">
+                    <div class="col-auto" v-if="!user_active">
                         <div class="row mx-0">
-                            <label class="col-auto px-0 col-form-label small">Log in as:</label>
                             <div class="col-auto">
-                                <select class="form-select form-select-sm" v-model="user" v-if="users" v-on:change="update">
-                                    <option v-for="u in users" v-bind:value="u" v-text="u.name"></option>
+                                <select class="form-select form-select-sm" v-model="users.selected" v-if="users && users.listing" v-on:change="user_switch">
+                                    <option value="null">Log in as …</option>
+                                    <option v-for="u in users.listing" v-bind:value="u.name" v-text="u.name"></option>
                                 </select>
                             </div>
-                            <button class="btn btn-sm btn-link col-auto px-0" v-on:click="login">new</button>
+                            <button class="btn btn-sm btn-secondary col-auto" v-on:click="user_signup">Sign up</button>
                         </div>
                     </div>
                 </div>
@@ -49,15 +52,19 @@
                     <div class="col-auto px-0">
                         <button class="btn btn-sm btn-warning" v-on:click="get_records">Update</button>
                     </div>
+                    <div class="col-auto">|</div>
                     <div class="col-auto px-0 ps-2">
                         <button class="btn btn-sm btn-secondary" v-on:click="print">Print</button>
                     </div>
+                    <div class="col-auto">|</div>
                     <div class="col-auto px-0 ps-2 pe-2">
                         <button class="btn btn-sm btn-success" v-on:click="create_record">Add Record</button>
                     </div>
                 </div>
+
             </div>
 
+            <!-- summary -->
             <div class="my-4 x125" v-if="data">
                 <div v-if="data" class="row">
                     <strong class="col-2 text-end">User:</strong>
@@ -80,6 +87,12 @@
                 </div>
             </div>
 
+            <!-- status message -->
+            <div v-if="status_message" class="alert alert-warning d-print-none" role="alert">
+                <button type="button" class="btn-close float-end" v-on:click="status_message=null;"></button>
+                <p v-text="status_message" class="m-0 p-0 text-center"></p>
+            </div>
+
             <!-- active record form -->
             <div v-if="active_record" class="p-5 my-5 mx-0 rounded border border-black bg-white container shadow shadow-large position-fixed top-0" id="active_record">
                 <h3 class="bg-light border-bottom">Record #<span v-text="active_record.id || 'new'"></span></h3>
@@ -98,8 +111,8 @@
                         </div>
                         <div class="col-9">
                             <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('same', 'start', 'end')">=</button>
-                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('today')">Today</button>
                             <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('now')">Now</button>
+                            <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('today')">Today</button>
                             <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm('noon')">12:00</button>
                             <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm(600)">+10m</button>
                             <button class="btn btn-sm btn-light" v-on:click="active_record_set_tm(1800)">+30m</button>
@@ -137,8 +150,8 @@
                         </div>
                     </div>
                     <div class="mt-5 mb-2 bg-light overflow-auto">
-                        <div v-if="active_record.errors" class="mt-0 mb-2 bg-warning">
-                            <p v-text="active_record.errors" class="py-1 px-2 m-0 text-center"></p>
+                        <div v-if="active_record.errors" class="alert alert-danger" role="alert">
+                            <p v-text="active_record.errors" class="py-0 px-2 m-0 text-center"></p>
                         </div>
                         <button class="btn btn-secondary float-start" v-on:click.prevent.stop="close_active_record">Close</button>
                         <button v-if="active_record.id && !active_record.delete_id" class="btn btn-danger float-start mx-2" v-on:click.prevent.stop="delete_record">Delete</button>

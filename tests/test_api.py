@@ -16,6 +16,7 @@ class TestAPIUsers(DataBaseTestMixin, unittest.TestCase):
 
     def setUp(self):
         super().setUp()
+        settings.AUTH_USERS_ALLOW_UNKNOWN = True
         self.client = TestClient(app)
 
     def test_404(self):
@@ -40,6 +41,7 @@ class TestAPIRecords(DataBaseTestMixin, unittest.TestCase):
     def setUp(self):
         """."""
         super().setUp()
+        settings.AUTH_USERS_ALLOW_UNKNOWN = True
         self.client = TestClient(app)
 
     def test_records_list(self, N=100):

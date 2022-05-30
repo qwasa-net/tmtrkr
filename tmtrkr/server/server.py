@@ -43,7 +43,6 @@ def run(zipapp=False):
 
     uvicorn.run(
         app,
-        # reload=not zipapp,
         access_log=True,
         host=tmtrkr.settings.SERVER_BIND_HOST,
         port=tmtrkr.settings.SERVER_BIND_PORT,

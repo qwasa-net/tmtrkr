@@ -137,9 +137,17 @@ def login_oauth2_authorize(code: str, db=Depends(models.db_session)):
     )
     rsp_info = json.load(request.urlopen(req_info))
     # get or create user, set cookie and redirect to home page
-    email = rsp_info.get("email")
-    user = get_user(username=email, db=db)
+    username = rsp_info.get(settings.AUTH_OAUTH_USERINFO_USERNAME)
+    user = get_user(username=username, db=db)
     token = build_token(user)
     response = RedirectResponse(settings.AUTH_OAUTH_FINAL_URL)
     response.set_cookie(key="token", value=token)
     return response
+
+
+@api.get("/oauth2-logout")
+async def logout_oauth2():
+    """Redirect to oAuth2 login form."""
+    if settings.AUTH_OAUTH_LOGOUT_URL:
+        return RedirectResponse(settings.AUTH_OAUTH_LOGOUT_URL)
+    return RedirectResponse("/")

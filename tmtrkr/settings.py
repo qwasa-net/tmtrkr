@@ -49,9 +49,17 @@ AUTH_OAUTH_USERINFO_URL = os.environ.get(
     "TMTRKR_AUTH_OAUTH_USERINFO_URL",
     "https://openidconnect.googleapis.com/v1/userinfo",
 )
+AUTH_OAUTH_USERINFO_USERNAME = os.environ.get(
+    "TMTRKR_AUTH_OAUTH_USERINFO_USERNAME",
+    "email",
+)
 AUTH_OAUTH_FINAL_URL = os.environ.get(
     "TMTRKR_AUTH_OAUTH_FINAL_URL",
     "/?oauth2",
+)
+AUTH_OAUTH_LOGOUT_URL = os.environ.get(
+    "TMTRKR_AUTH_OAUTH_LOGOUT_URL",
+    "https://accounts.google.com/o/oauth2/v2/logout?client_id=…",
 )
 
 #

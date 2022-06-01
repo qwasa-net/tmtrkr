@@ -8,4 +8,7 @@ db.sqlite
 **/db.sqlite
 
 _kakas
+.vscode
+.settings
+.idea
 

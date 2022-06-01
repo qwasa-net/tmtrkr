@@ -10,6 +10,7 @@ FORMATTER_PY ?= "${VENV}/bin/black"
 FORMATTER_WWW_JS ?= "${VENV}/bin/js-beautify" --replace --end-with-newline --brace-style=collapse,preserve-inline
 FORMATTER_WWW_CSS ?= "${VENV}/bin/css-beautify" --replace --end-with-newline
 DOCKER ?= DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker
+DATABASE_URL ?= $(BASE_DIR)/db.sqlite
 
 
 help:
@@ -17,10 +18,10 @@ help:
 	-@grep ' \ ##' $(realpath $(firstword $(MAKEFILE_LIST))) | sed 's/^/  - /ig'
 
 
-tea: env env_dev lint test initdb run  ## do magic, start from here
+tea: env env_dev lint test initdb demodb run  ## do magic, start from here
 
 
-env:  ## create vrtual env
+env:  ## create python vrtual env
 	@$(PYTHON_SYSTEM) --version
 	[ -e $(PYTHON) ] || $(PYTHON_SYSTEM) -m venv --clear $(VENV) && ls -l $(PYTHON)
 	$(PIP) install -U pip
@@ -33,7 +34,6 @@ env_dev: env
 	$(PIP) install -r requirements-dev.txt
 
 
-run: DATABASE_URL ?= $(BASE_DIR)/db.sqlite
 run:  ## run demo server
 	cd "$(BASE_DIR)"; \
 	PYTHONPATH=.:"$(BASE_DIR)" \
@@ -41,7 +41,6 @@ run:  ## run demo server
 	$(PYTHON) tmtrkr/server/server.py
 
 
-initdb: DATABASE_URL ?= $(BASE_DIR)/db.sqlite
 initdb:  ## apply all db migrations
 	cd "$(BASE_DIR)"; \
 	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" \
@@ -50,11 +49,10 @@ initdb:  ## apply all db migrations
 	$(ALEMBIC) current
 
 
-demodb: DATABASE_URL ?= $(BASE_DIR)/db.sqlite
 demodb: initdb  ## create demo db
 	cd "$(BASE_DIR)"; \
 	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" \
-	$(PYTHON) tmtrkr/misc/demodb.py
+	$(PYTHON) tmtrkr/misc/demodb.py --only-if-empty
 
 
 lint:  # run source code linters
@@ -68,10 +66,10 @@ format:  # run source code formatters
 	$(FORMATTER_WWW_CSS) www/css/tmtrkr.css
 
 
-test: DATABASE_URL ?= $(shell mktemp)
-test:  # run test
-	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" $(PYTHON) -u -m unittest -v
-	@rm -v "$(DATABASE_URL)"
+test: TEST_DATABASE_URL ?= $(shell mktemp)
+test:  # run tests
+	TMTRKR_DATABASE_URL="sqlite:///$(TEST_DATABASE_URL)" $(PYTHON) -u -m unittest -v
+	-rm -v "$(TEST_DATABASE_URL)"
 
 
 clean:  # cleanup python cache
@@ -79,21 +77,21 @@ clean:  # cleanup python cache
 	find ./tmtrkr -iname __pycache__ -print -delete
 
 
-container_build:  ## build container
+container_build:  ## build tmtrkr image
 	$(DOCKER) build . --file tmtrkr.dockerfile --tag tmtrkr
 
 
-container_run:  ## run container
+container_run:  ## run tmtrkr container
 	-$(DOCKER) run --publish 8181:8181 --rm=true --tty --interactive tmtrkr
 
 
-container_run_db:
+container_run_db: # run container and mount database from './_db/'
 	-mkdir -pv _db
 	-$(DOCKER) run --publish 8181:8181 --mount "type=bind,src=$$(pwd)/_db,dst=/tmtrkr/db" --rm=true --tty --interactive tmtrkr
 
 
 zipapp_build: ZIPAPP_BUILD_PATH := $(shell mktemp --directory --dry-run)/tmtrkr_app
-zipapp_build: clean  ## pack app into .pyz
+zipapp_build: clean  ## pack app into .pyz, run it: 'python3 tmtrtk.pyz'
 	mkdir -pv "$(ZIPAPP_BUILD_PATH)"
 	$(PIP) install -r requirements.txt --target "$(ZIPAPP_BUILD_PATH)"
 	# copy app and statics

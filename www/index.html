@@ -24,6 +24,7 @@
                     <div class="col-auto">
                         <button class="btn btn-sm btn-link" v-on:click="toggle_locale" v-text="'Locale: ' + locale_name"></button>
                         <button class="btn btn-sm btn-link" v-on:click="toggle_timezone" v-text="'TZ: ' + timezone_name"></button>
+                        <button class="btn btn-sm btn-link" v-on:click="toggle_weeks" v-text="'Weeks №s: ' + show.weeks"></button>
                     </div>
                     <div class="col-auto">|</div>
                     <div class="col-auto" v-if="user_active">
@@ -50,10 +51,10 @@
 
                 <div class="row align-items-center py-1 justify-content-end mx-0">
                     <div class="col-auto px-0">
-                        <input name="start" class="form-control form-control-sm" type="date" v-model="filter.start_a">
+                        <input name="start" class="form-control form-control-sm" type="date" v-model="filter.start_a" v-on:change="get_records">
                     </div>
                     <div class="col-auto px-0">
-                        <input name="start" class="form-control form-control-sm" type="date" v-model="filter.start_b">
+                        <input name="start" class="form-control form-control-sm" type="date" v-model="filter.start_b" v-on:change="get_records">
                     </div>
                     <div class="col-auto px-0">
                         <button class="btn btn-sm btn-warning" v-on:click="get_records">Update</button>
@@ -78,11 +79,17 @@
                 </div>
                 <div v-if="data && data.query_start_min" class="row">
                     <strong class="col-2 text-end">From:</strong>
-                    <span v-text="ts_fmt(data.query_start_min)" class="col-10"></span>
+                    <span class="col-10">
+                        <span v-text="ts_fmt(data.query_start_min)"></span>
+                        <span v-if="show.weeks" v-text="'; w' + ts_week_fmt(data.query_start_min)"></span>
+                    </span>
                 </div>
                 <div v-if="data && data.query_start_max" class="row">
                     <strong class="col-2 text-end">To:</strong>
-                    <span v-text="ts_fmt(data.query_start_max)" class="col-10"></span>
+                    <span class="col-10">
+                        <span v-text="ts_fmt(data.query_start_max)"></span>
+                        <span v-if="show.weeks" v-text="'; w' + ts_week_fmt(data.query_start_max)"></span>
+                    </span>
                 </div>
                 <div v-if="data && data.duration" class="row">
                     <strong class="col-2 text-end">Total:</strong>

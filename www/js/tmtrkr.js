@@ -18,6 +18,9 @@ const tmtrkr_app = Vue.createApp({
             timezone: null,
             timezone_local: null,
             locale: [],
+            show: {
+                weeks: true,
+            }
         }
     },
 
@@ -400,6 +403,10 @@ const tmtrkr_app = Vue.createApp({
             }
         },
 
+        toggle_weeks() {
+            this.show.weeks = !this.show.weeks;
+        },
+
         duration_hours_fmt(secs) {
             let h = secs / (60 * 60);
             return h.toFixed(2);
@@ -461,6 +468,14 @@ const tmtrkr_app = Vue.createApp({
             };
             let dt = this.ts_date(ts);
             return dt.toLocaleString(this.locale, options);
+        },
+
+        ts_week_fmt(ts) {
+            let dt = this.ts_date(ts);
+            let j4 = new Date(dt.getFullYear(), 0, 4);
+            let date = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+            let week_number = 1 + Math.round(((date.getTime() - j4.getTime()) / 86400000 - 3 + (j4.getDay() + 6) % 7) / 7);
+            return week_number;
         },
 
         ts_fmt(ts, timezone) {

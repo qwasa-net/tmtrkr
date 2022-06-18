@@ -1,12 +1,11 @@
 """API for the users (Not fully Implemented Yet)."""
 
-import json
 import time
 from typing import Optional
-from urllib import parse, request
 
 import jwt
-from fastapi import APIRouter, Cookie, Depends, Header, HTTPException
+from authlib.integrations.starlette_client import OAuth
+from fastapi import APIRouter, Cookie, Depends, Header, HTTPException, Request
 from fastapi import status as status_code
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordBearer
@@ -18,11 +17,30 @@ __all__ = ["api", "get_user"]
 
 api = APIRouter()
 
+# cached oauth client
+_oauth2_client = None
+
+
+def get_oauth2_client():
+    """Create oauth2 client, read provider configuration."""
+    if _oauth2_client:
+        return _oauth2_client
+    oauth = OAuth()
+    oauth_client = oauth.register(
+        settings.AUTH_OAUTH2_CLIENT_ID,
+        client_id=settings.AUTH_OAUTH2_CLIENT_ID,
+        client_secret=settings.AUTH_OAUTH2_CLIENT_SECRET,
+        server_metadata_url=settings.AUTH_OAUTH2_METADATA_URL,
+        client_kwargs={"scope": settings.AUTH_OAUTH2_SCOPE},
+    )
+    globals()["_oauth2_client"] = oauth_client
+    return oauth_client
+
 
 def get_username(
-    x_user: Optional[str] = Header(alias="x-forwarded-user", default=None),
     auth_token: Optional[str] = Depends(OAuth2PasswordBearer(tokenUrl="", auto_error=False)),
-    cookie_token: Optional[str] = Cookie(alias="token", default=None),
+    cookie_token: Optional[str] = Cookie(alias=settings.AUTH_USERS_ALLOW_JWT_COOKIE_BRAND, default=None),
+    x_user: Optional[str] = Header(alias=settings.AUTH_USERS_ALLOW_XFORWARDED_HEADER, default=None),
 ) -> Optional[str]:
     """Get username from trusted header or JWT token."""
     if settings.AUTH_USERS_ALLOW_XFORWARDED and x_user:
@@ -96,7 +114,9 @@ async def login():
 @api.get("/logout")
 async def logout():
     """Log out user."""
-    raise HTTPException(status_code=status_code.HTTP_501_NOT_IMPLEMENTED)
+    response = RedirectResponse("/")
+    response.set_cookie(key=settings.AUTH_USERS_ALLOW_JWT_COOKIE_BRAND, value=None)
+    return response
 
 
 @api.get("/token", response_model=schemas.TokenResponse)
@@ -107,47 +127,31 @@ async def get_token(user=Depends(get_user)) -> schemas.TokenResponse:
 
 
 @api.get("/oauth2-login")
-async def login_oauth2():
+async def login_oauth2(req: Request, oauth_client=Depends(get_oauth2_client)):
     """Redirect to oAuth2 login form."""
-    if settings.AUTH_OAUTH_LOGIN_URL and settings.AUTH_OAUTH_TOKEN_URL:
-        return RedirectResponse(settings.AUTH_OAUTH_LOGIN_URL)
-    raise HTTPException(status_code=status_code.HTTP_412_PRECONDITION_FAILED)
+    return await oauth_client.authorize_redirect(req, settings.AUTH_OAUTH2_AUTHORIZE_URL)
 
 
 @api.get("/oauth2-authorize")
-def login_oauth2_authorize(code: str, db=Depends(models.db_session)):
-    """Authorize oAuth2, get user info -- create user, set cookie."""
-    # get access token
-    form = {"code": code}
-    form.update(settings.AUTH_OAUTH_TOKEN_URL_FORM)
-    req_token = request.Request(
-        url=settings.AUTH_OAUTH_TOKEN_URL,
-        method="POST",
-        data=parse.urlencode(form).encode(),
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-    )
-    rsp_token = json.load(request.urlopen(req_token))
-    token = rsp_token.get("access_token")
-    token_type = rsp_token.get("token_type")
-    # get user info
-    req_info = request.Request(
-        url=settings.AUTH_OAUTH_USERINFO_URL,
-        method="GET",
-        headers={"Authorization": f"{token_type} {token}"},
-    )
-    rsp_info = json.load(request.urlopen(req_info))
-    # get or create user, set cookie and redirect to home page
-    username = rsp_info.get(settings.AUTH_OAUTH_USERINFO_USERNAME)
+async def login_oauth2_authorize(
+    req: Request,
+    oauth_client=Depends(get_oauth2_client),
+    db=Depends(models.db_session),
+):
+    token = await oauth_client.authorize_access_token(req)
+    username = token.get("userinfo", {}).get(settings.AUTH_OAUTH_USERINFO_USERNAME)
     user = get_user(username=username, db=db)
     token = build_token(user)
     response = RedirectResponse(settings.AUTH_OAUTH_FINAL_URL)
-    response.set_cookie(key="token", value=token)
+    response.set_cookie(key=settings.AUTH_USERS_ALLOW_JWT_COOKIE_BRAND, value=token)
     return response
 
 
 @api.get("/oauth2-logout")
-async def logout_oauth2():
+async def logout_oauth2(
+    oauth_client=Depends(get_oauth2_client),
+):
     """Redirect to oAuth2 login form."""
-    if settings.AUTH_OAUTH_LOGOUT_URL:
-        return RedirectResponse(settings.AUTH_OAUTH_LOGOUT_URL)
-    return RedirectResponse("/")
+    if oauth_client.server_metadata and oauth_client.server_metadata.get("end_session_endpoint"):
+        return RedirectResponse(url=oauth_client.server_metadata.get("end_session_endpoint"))
+    return logout()

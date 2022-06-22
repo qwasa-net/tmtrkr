@@ -11,6 +11,7 @@ FORMATTER_WWW_JS ?= "${VENV}/bin/js-beautify" --replace --end-with-newline --bra
 FORMATTER_WWW_CSS ?= "${VENV}/bin/css-beautify" --replace --end-with-newline
 DOCKER ?= DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker
 DATABASE_URL ?= $(BASE_DIR)/db.sqlite
+VERSION_HASH ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown-version")
 
 
 help:
@@ -91,13 +92,21 @@ container_run_db: # run container and mount database from './_db/'
 
 
 zipapp_build: ZIPAPP_BUILD_PATH := $(shell mktemp --directory --dry-run)/tmtrkr_app
-zipapp_build: clean  ## pack app into .pyz, run it: 'python3 tmtrtk.pyz'
+zipapp_build: ZIPAPP_BUILD_OUTPUT := "tmtrkr-$(VERSION_HASH).pyz"
+zipapp_build: env clean  ## pack app into .pyz, run it: 'python3 tmtrtk.pyz'
 	mkdir -pv "$(ZIPAPP_BUILD_PATH)"
-	$(PIP) install -r requirements.txt --target "$(ZIPAPP_BUILD_PATH)"
+	$(PIP) install -r requirements.txt --no-deps --target "$(ZIPAPP_BUILD_PATH)"
+	# FIXME: UGLY HACK -- cryptography binary bindings do not work from zipapp, do not pack them, use system
+	# $(PIP) uninstall --target "$(ZIPAPP_BUILD_PATH)" cffi cryptography # and this does not work
+	-find "$(ZIPAPP_BUILD_PATH)/cryptography/" -iname '*.py' -print -delete
 	# copy app and statics
 	cp -rv tmtrkr "$(ZIPAPP_BUILD_PATH)"
 	cp -rv zipapp/__main__.py "$(ZIPAPP_BUILD_PATH)"
 	cp -rv www "$(ZIPAPP_BUILD_PATH)/tmtrkr/"
 	# build a zippapp
-	$(PYTHON) -m zipapp --compress --output "tmtrkr.pyz" --python $(PYTHON_SYSTEM) "$(ZIPAPP_BUILD_PATH)"
-	# rm -rfv "$(ZIPAPP_BUILD_PATH)
+	$(PYTHON) -m zipapp --compress --output $(ZIPAPP_BUILD_OUTPUT) --python $(PYTHON_SYSTEM) "$(ZIPAPP_BUILD_PATH)"
+	rm -rfv "$(ZIPAPP_BUILD_PATH)"
+
+zipapp_run: ZIPAPP_BUILD_OUTPUT := "tmtrkr-$(VERSION_HASH).pyz"
+zipapp_run: zipapp_build
+	$(PYTHON) "$(ZIPAPP_BUILD_OUTPUT)"

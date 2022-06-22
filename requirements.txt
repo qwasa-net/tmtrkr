@@ -22,7 +22,7 @@ pyjwt==2.4.0
 # authlib
 authlib==1.0.1
 cffi==1.15.0
-cryptography==37.0.2
+# cryptography==37.0.2
 pycparser==2.21
 httpcore==0.15.0
 httpx==0.23.0

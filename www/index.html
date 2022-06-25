@@ -71,6 +71,12 @@
 
             </div>
 
+            <!-- status message -->
+            <div v-if="status_message" class="alert alert-warning d-print-none" role="alert">
+                <button type="button" class="btn-close float-end" v-on:click="status_message=null;"></button>
+                <p v-text="status_message" class="m-0 p-0 text-center"></p>
+            </div>
+
             <!-- summary -->
             <div class="my-4 x125" v-if="data">
                 <div v-if="data" class="row">
@@ -98,12 +104,6 @@
                         <span v-text="' (' + duration_hours_fmt(data.duration) + 'h)'" class="text-muted"></span>
                     </span>
                 </div>
-            </div>
-
-            <!-- status message -->
-            <div v-if="status_message" class="alert alert-warning d-print-none" role="alert">
-                <button type="button" class="btn-close float-end" v-on:click="status_message=null;"></button>
-                <p v-text="status_message" class="m-0 p-0 text-center"></p>
             </div>
 
             <!-- active record form -->

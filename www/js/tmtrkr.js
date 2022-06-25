@@ -315,10 +315,23 @@ const tmtrkr_app = Vue.createApp({
         },
 
         user_logout() {
-            this.user_active = null;
-            this.users.selected = null;
-            document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-            this.update();
+            let url = API_URL + '/users/logout';
+            fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...this.auth_headers()
+                    },
+                })
+                .then((rsp) => {
+                    this.user_active = null;
+                    this.users.selected = null;
+                    this.update();
+                    this.status_message = "Logged-out.";
+                })
+                .catch((error) => {
+                    console.error(error);
+                });
         },
 
         user_signup() {
@@ -346,6 +359,7 @@ const tmtrkr_app = Vue.createApp({
 
         user_login() {
             let url = API_URL + '/users/token';
+
             fetch(url, {
                     method: 'GET',
                     headers: {
@@ -358,6 +372,7 @@ const tmtrkr_app = Vue.createApp({
                         rsp.json().then(data => {
                             this.user_active.token = data.token;
                             this.update();
+                            this.status_message = `Logged-in as ${this.user_active.name}`;
                         });
                     } else {
                         this.status_message = `Login failed: ${rsp.status} ${rsp.statusText}`
@@ -366,6 +381,7 @@ const tmtrkr_app = Vue.createApp({
                 .catch((error) => {
                     console.error(error);
                     this.status_message = error;
+                    this.user_logout();
                 });
         },
 

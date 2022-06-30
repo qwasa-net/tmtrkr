@@ -44,14 +44,18 @@ run:  ## run demo server
 
 initdb:  ## apply all db migrations
 	cd "$(BASE_DIR)"; \
+	PYTHONPATH=.:"$(BASE_DIR)" \
 	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" \
-	$(ALEMBIC) upgrade head; \
+	$(ALEMBIC) upgrade head;
+	cd "$(BASE_DIR)"; \
+	PYTHONPATH=.:"$(BASE_DIR)" \
 	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" \
 	$(ALEMBIC) current
 
 
 demodb: initdb  ## create demo db
 	cd "$(BASE_DIR)"; \
+	PYTHONPATH=.:"$(BASE_DIR)" \
 	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" \
 	$(PYTHON) tmtrkr/misc/demodb.py --only-if-empty
 
@@ -69,7 +73,10 @@ format:  # run source code formatters
 
 test: TEST_DATABASE_URL ?= $(shell mktemp)
 test:  # run tests
-	TMTRKR_DATABASE_URL="sqlite:///$(TEST_DATABASE_URL)" $(PYTHON) -u -m unittest -v
+	cd "$(BASE_DIR)"; \
+	PYTHONPATH=.:"$(BASE_DIR)" \
+	TMTRKR_DATABASE_URL="sqlite:///$(TEST_DATABASE_URL)" \
+	$(PYTHON) -u -m unittest -v
 	-rm -v "$(TEST_DATABASE_URL)"
 
 
@@ -91,7 +98,7 @@ container_run_db: # run container and mount database from './_db/'
 	-$(DOCKER) run --publish 8181:8181 --mount "type=bind,src=$$(pwd)/_db,dst=/tmtrkr/db" --rm=true --tty --interactive tmtrkr
 
 
-zipapp_build: ZIPAPP_BUILD_PATH := $(shell mktemp --directory --dry-run)/tmtrkr_app
+zipapp_build: ZIPAPP_BUILD_PATH := $(shell mktemp -d -u)/tmtrkr_app
 zipapp_build: ZIPAPP_BUILD_OUTPUT := "tmtrkr-$(VERSION_HASH).pyz"
 zipapp_build: env clean  ## pack app into .pyz, run it: 'python3 tmtrtk.pyz'
 	mkdir -pv "$(ZIPAPP_BUILD_PATH)"

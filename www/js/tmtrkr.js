@@ -102,12 +102,12 @@ const tmtrkr_app = Vue.createApp({
             this.data = null;
 
             fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...this.auth_headers()
-                    },
-                })
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...this.auth_headers()
+                },
+            })
                 .then(rsp => {
                     rsp.json().then(data => {
                         if (rsp.ok) {
@@ -165,12 +165,12 @@ const tmtrkr_app = Vue.createApp({
             }
             let url = API_URL + `/records/${ac.delete_id}`;
             fetch(url, {
-                    method: "DELETE",
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...this.auth_headers()
-                    },
-                })
+                method: "DELETE",
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...this.auth_headers()
+                },
+            })
                 .then(rsp => {
                     rsp.json().then(data => {
                         if (rsp.ok && data) {
@@ -219,14 +219,14 @@ const tmtrkr_app = Vue.createApp({
                 method = "PATCH";
             }
             fetch(url, {
-                    method: method,
-                    cache: 'no-cache',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...this.auth_headers()
-                    },
-                    body: JSON.stringify(data)
-                })
+                method: method,
+                cache: 'no-cache',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...this.auth_headers()
+                },
+                body: JSON.stringify(data)
+            })
                 .then(rsp => {
                     rsp.json().then(data => {
                         if (rsp.ok && data) {
@@ -298,12 +298,12 @@ const tmtrkr_app = Vue.createApp({
         get_users() {
             let url = API_URL + '/users/';
             fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...this.auth_headers()
-                    },
-                })
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...this.auth_headers()
+                },
+            })
                 .then(rsp => rsp.json())
                 .then(data => {
                     this.users.listing = data.users;
@@ -317,12 +317,12 @@ const tmtrkr_app = Vue.createApp({
         user_logout() {
             let url = API_URL + '/users/logout';
             fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...this.auth_headers()
-                    },
-                })
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...this.auth_headers()
+                },
+            })
                 .then((rsp) => {
                     this.user_active = null;
                     this.users.selected = null;
@@ -361,12 +361,12 @@ const tmtrkr_app = Vue.createApp({
             let url = API_URL + '/users/token';
 
             fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Forwarded-User': this.user_active.name
-                    },
-                })
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Forwarded-User': this.user_active.name
+                },
+            })
                 .then(rsp => {
                     if (rsp.ok) {
                         rsp.json().then(data => {
@@ -394,11 +394,16 @@ const tmtrkr_app = Vue.createApp({
         },
 
         print() {
+            let title_parts = ["TmTrkr"];
+            if (this.user_active) {
+                title_parts.push(`${this.user_active.name || "-"}`);
+            }
             if (this.filter && this.filter.start_a && this.filter.start_b) {
                 let a = this.ts_date(this.filter.start_a);
                 let b = this.ts_date(this.filter.start_b);
-                document.title = `TmTrkr_${this.ts_yymd(a)}-${this.ts_yymd(b)}`;
+                title_parts.push(`${this.ts_yymd(a)}-${this.ts_yymd(b)}`);
             }
+            document.title = title_parts.join("_");
             window.print();
         },
 
@@ -413,7 +418,7 @@ const tmtrkr_app = Vue.createApp({
 
         toggle_locale() {
             if (!this.locale || !this.locale.length) {
-                this.locale = ["en-US", ];
+                this.locale = ["en-US",];
             } else {
                 this.locale = [];
             }

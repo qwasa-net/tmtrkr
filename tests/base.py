@@ -4,6 +4,8 @@ import tmtrkr.models
 
 # set up logging
 logging.basicConfig(level=logging.INFO)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("sqlalchemy").setLevel(logging.WARNING)
 
 
 class DataBaseTestMixin:

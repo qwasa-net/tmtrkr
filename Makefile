@@ -28,6 +28,7 @@ env:  ## create python vrtual env
 	$(PIP) install -U pip
 	# pip install sqlalchemy alembic fastapi uvicorn
 	$(PIP) install -r requirements.txt
+	$(PIP) install -r requirements-psql.txt || echo "WARNING: PostgreSQL drivers is not installed!"
 
 
 env_dev: env
@@ -76,7 +77,7 @@ test:  # run tests
 	cd "$(BASE_DIR)"; \
 	PYTHONPATH=.:"$(BASE_DIR)" \
 	TMTRKR_DATABASE_URL="sqlite:///$(TEST_DATABASE_URL)" \
-	$(PYTHON) -u -m unittest -v
+	$(PYTHON) -u -m unittest --failfast --verbose
 	-rm -v "$(TEST_DATABASE_URL)"
 
 
@@ -93,7 +94,7 @@ container_run:  ## run tmtrkr container
 	-$(DOCKER) run --publish 8181:8181 --rm=true --tty --interactive tmtrkr
 
 
-container_run_db: # run container and mount database from './_db/'
+container_run_mount_sqlitedb: # run container and mount database from './_db/'
 	-mkdir -pv _db
 	-$(DOCKER) run --publish 8181:8181 --mount "type=bind,src=$$(pwd)/_db,dst=/tmtrkr/db" --rm=true --tty --interactive tmtrkr
 
@@ -111,8 +112,10 @@ zipapp_build: env clean  ## pack app into .pyz, run it: 'python3 tmtrtk.pyz'
 	cp -rv zipapp/__main__.py "$(ZIPAPP_BUILD_PATH)"
 	cp -rv www "$(ZIPAPP_BUILD_PATH)/tmtrkr/"
 	# build a zippapp
-	$(PYTHON) -m zipapp --compress --output $(ZIPAPP_BUILD_OUTPUT) --python $(PYTHON_SYSTEM) "$(ZIPAPP_BUILD_PATH)"
+	$(PYTHON_SYSTEM) -m zipapp --compress --output $(ZIPAPP_BUILD_OUTPUT) --python $(PYTHON_SYSTEM) "$(ZIPAPP_BUILD_PATH)"
 	rm -rfv "$(ZIPAPP_BUILD_PATH)"
+	ls -lh "$(ZIPAPP_BUILD_OUTPUT)"
+
 
 zipapp_run: ZIPAPP_BUILD_OUTPUT := "tmtrkr-$(VERSION_HASH).pyz"
 zipapp_run: zipapp_build

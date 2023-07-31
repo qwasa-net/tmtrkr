@@ -122,7 +122,7 @@ def create_record(
     db=Depends(models.db_session),
 ) -> schemas.RecordOutput:
     """Create a new record."""
-    record = models.Record(user=user, **data.dict())
+    record = models.Record(user=user, **data.model_dump())
     record.save(db)
     return record.as_dict()
 
@@ -138,7 +138,7 @@ def update_record(
     record = models.Record.first(db, id=record_id, user=user)
     if not record:
         raise HTTPException(status_code.HTTP_404_NOT_FOUND)
-    record.update(**data.dict())
+    record.update(**data.model_dump())
     record.save(db)
     return record.as_dict()
 

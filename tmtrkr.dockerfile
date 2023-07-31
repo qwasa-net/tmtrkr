@@ -16,17 +16,19 @@ RUN apt-get update && \
 WORKDIR /tmtrkr
 
 COPY  requirements*txt Makefile alembic.ini /tmtrkr/
-COPY  tmtrkr /tmtrkr/tmtrkr
-COPY  alembic /tmtrkr/alembic
-COPY  www /tmtrkr/www
-COPY  tests /tmtrkr/tests
 
 RUN --mount=type=cache,mode=0755,id=pip-cache,target=/var/pip-cache \
     python3 -m venv _venv && \
     _venv/bin/pip install --cache-dir /var/pip-cache --upgrade pip wheel && \
     _venv/bin/pip install --cache-dir /var/pip-cache --prefer-binary -r requirements.txt && \
-    _venv/bin/pip install --cache-dir /var/pip-cache --prefer-binary -r requirements-psql.txt && \
-    mkdir -pv /tmtrkr/db/ && chmod 777 /tmtrkr/db && \
+    _venv/bin/pip install --cache-dir /var/pip-cache --prefer-binary -r requirements-psql.txt
+
+COPY  tmtrkr /tmtrkr/tmtrkr
+COPY  alembic /tmtrkr/alembic
+COPY  www /tmtrkr/www
+COPY  tests /tmtrkr/tests
+
+RUN mkdir -pv /tmtrkr/db/ && chmod 777 /tmtrkr/db && \
     _venv/bin/alembic --name alembic-container upgrade head && \
     _venv/bin/python tmtrkr/misc/demodb.py >/dev/null
 

@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:experimental
-ARG BASE_IMAGE=python:3.11-slim
+ARG BASE_IMAGE=python:3.12-slim
 FROM ${BASE_IMAGE}
 
 ENV PYTHONUNBUFFERED 1

@@ -1,4 +1,5 @@
 """Demo database."""
+
 import argparse
 import datetime
 import logging

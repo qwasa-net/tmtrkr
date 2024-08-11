@@ -1,11 +1,12 @@
 """Demo server."""
-import tmtrkr.settings
+
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from tmtrkr.api.api import app
 
+import tmtrkr.settings
+from tmtrkr.api.api import app
 from tmtrkr.server.packagestaticfiles import PackageStaticFiles
 
 

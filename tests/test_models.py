@@ -1,4 +1,5 @@
 """Database models tests."""
+
 import datetime
 import unittest
 

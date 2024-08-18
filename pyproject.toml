@@ -5,5 +5,4 @@ description = "TmTrkr"
 readme = "README.md"
 
 [tool.black]
-taget-version = "py39"
 line-length = 120

@@ -1,7 +1,7 @@
-from .db import db_session, db_connection
+from .base import Base
+from .db import db_connection, db_session
 from .records import Record
 from .users import User
-from .base import Base
 
 
 def create_all():

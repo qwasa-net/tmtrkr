@@ -1,8 +1,10 @@
 """API for the records (GET/POST/UPADTE/DELETE)."""
+
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi import status as status_code
+
 from tmtrkr import models, settings
 from tmtrkr.api import schemas
 from tmtrkr.api.users import get_user

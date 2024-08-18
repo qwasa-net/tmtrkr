@@ -1,10 +1,12 @@
 """."""
+
 import datetime
 import random
 import unittest
 
-import tmtrkr.settings as settings
 from fastapi.testclient import TestClient
+
+import tmtrkr.settings as settings
 from tmtrkr.api.api import app
 from tmtrkr.models import Record
 
@@ -72,7 +74,11 @@ class TestAPIRecords(DataBaseTestMixin, unittest.TestCase):
         ] * N
         for record in records:
             rsp = self.client.post(settings.API_BASE_PREFIX + "/records/", json=record)
-            self.assertIn(rsp.status_code, [200, 201])
+            self.assertIn(
+                rsp.status_code,
+                [200, 201],
+                f"[{rsp.status_code}]{rsp.text} {record}",
+            )
             data = rsp.json()
             self.assertTrue(data["id"] > 0)
             self.assertEqual(data["name"], record["name"])

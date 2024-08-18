@@ -1,9 +1,10 @@
 """API data schemas."""
+
 import re
 import time
 from typing import List, Optional
 
-from pydantic import BaseModel, model_validator, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 
 class User(BaseModel):
@@ -32,6 +33,7 @@ class RecordInput(Record):
     """Record input model (for POST/PUT requests)."""
 
     @field_validator("name")
+    @classmethod
     def name_length(cls, v):
         """Record name must be not empty."""
         if not v or len(str(v).strip()) == 0:
@@ -39,6 +41,7 @@ class RecordInput(Record):
         return str(v).strip()
 
     @field_validator("start")
+    @classmethod
     def start_exists(cls, v):
         """Start must be defined."""
         if not v:
@@ -46,13 +49,15 @@ class RecordInput(Record):
         return v
 
     @model_validator(mode="after")
-    def start_end_sanity(self):
+    def start_end_sanity(self, values):
         """Start must be before the End (if defined)."""
-        if self.start is not None and self.end is not None and self.end < self.start:
+        start, end = self.start, self.end
+        if start is not None and end is not None and end < start:
             raise ValueError("End < Start")
         return self
 
     @field_validator("tags")
+    @classmethod
     def tags_clean(cls, v):
         """Split the tags line."""
         if v:
@@ -93,6 +98,7 @@ class TokenData(BaseModel):
     expire: int = int(time.time() + 60 * 60)
 
     @field_validator("username")
+    @classmethod
     def name_not_empty(cls, v):
         """User name must be not empty."""
         if not v or len(str(v).strip()) == 0:
@@ -100,6 +106,7 @@ class TokenData(BaseModel):
         return str(v).strip()
 
     @field_validator("expire")
+    @classmethod
     def not_expired(cls, v):
         """Must be not expired."""
         if int(v) < int(time.time()):

@@ -1,4 +1,5 @@
 """TmTrkr application settings."""
+
 import json
 import os
 import random

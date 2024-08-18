@@ -1,4 +1,5 @@
 """User database model."""
+
 from sqlalchemy import Column, Integer, Text
 from sqlalchemy.orm import relationship
 

@@ -1,29 +1,30 @@
-# sqlalchemy alembic pydantic fastapi uvicorn
-alembic==1.11.2
-anyio==3.7.1
-asgiref==3.7.2
-click==8.1.3
-fastapi==0.101.0
-greenlet==2.0.2
+# pinned versions, works fine for me with python v3.12
+alembic==1.13.2
+annotated-types==0.7.0
+anyio==4.4.0
+asgiref==3.8.1
+Authlib==1.3.1
+certifi==2024.7.4
+cffi==1.17.0
+click==8.1.7
+cryptography==43.0.0
+exceptiongroup==1.2.2
+fastapi==0.112.1
+greenlet==3.0.3
 h11==0.14.0
-idna==3.3
-Mako==1.2.4
-MarkupSafe==2.1.3
-pydantic==2.1.1
-sniffio==1.3.0
-SQLAlchemy==2.0.19
-starlette==0.27.0
-typing_extensions==4.7.1
-uvicorn==0.23.2
-
-# pyjwt
-PyJWT==2.8.0
-
-# authlib
-Authlib==1.2.1
-cffi==1.15.1
-# cryptography
-httpcore==0.17.3
-httpx==0.24.1
+httpcore==1.0.5
+httpx==0.27.0
+idna==3.7
+itsdangerous==2.2.0
+Mako==1.3.5
+MarkupSafe==2.1.5
+pycparser==2.22
+pydantic==2.8.2
+pydantic_core==2.20.1
+PyJWT==2.9.0
 rfc3986==2.0.0
-itsdangerous==2.1.2
+sniffio==1.3.1
+SQLAlchemy==2.0.32
+starlette==0.38.2
+typing_extensions==4.12.2
+uvicorn==0.30.6

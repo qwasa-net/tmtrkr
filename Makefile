@@ -2,23 +2,24 @@ BASE_DIR ?= $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 VENV ?= $(BASE_DIR)/_venv
 PYTHON_SYSTEM ?= /usr/bin/python3
-PYTHON ?= "${VENV}/bin/python"
-PIP ?= "${VENV}/bin/pip"
-ALEMBIC ?= "${VENV}/bin/alembic"
+PYTHON ?= "$(VENV)/bin/python"
+PIP ?= "$(VENV)/bin/pip"
+ALEMBIC ?= "$(VENV)/bin/alembic"
 
-LINTER_PY ?= "${VENV}/bin/flake8" --statistics
-FORMATTER1_PY ?= "${VENV}/bin/isort"
-FORMATTER2_PY ?= "${VENV}/bin/black"
-FORMATTER_WWW_JS ?= "${VENV}/bin/js-beautify" --replace --end-with-newline --brace-style=collapse,preserve-inline
-FORMATTER_WWW_CSS ?= "${VENV}/bin/css-beautify" --replace --end-with-newline
+LINTER_PY ?= "$(VENV)/bin/flake8" --statistics
+FORMATTER1_PY ?= "$(VENV)/bin/isort"
+FORMATTER2_PY ?= "$(VENV)/bin/black"
+FORMATTER_WWW_JS ?= "$(VENV)/bin/js-beautify" --replace --end-with-newline --brace-style=collapse,preserve-inline
+FORMATTER_WWW_CSS ?= "$(VENV)/bin/css-beautify" --replace --end-with-newline
 
 DOCKER ?= DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker
 IMAGE_NAME ?= tmtrkr:latest
 CONTAINER_NAME ?= tmtrkr
 
-DATABASE_URL ?= $(BASE_DIR)/db.sqlite
+DATABASE_URL ?= "sqlite:///$(BASE_DIR)/db.sqlite"
 
-VERSION_HASH ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown-version")
+VERSION_HASH := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown-version")
+PYTHONPATH := "$(BASE_DIR)":$(PYTHONPATH)
 
 
 help:
@@ -45,23 +46,23 @@ env-dev: env ## add dev tools
 
 ## init and run
 run:  ## run demo server
-	PYTHONPATH="$(BASE_DIR)":${PYTHONPATH} \
-	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" \
+	PYTHONPATH=$(PYTHONPATH) \
+	TMTRKR_DATABASE_URL=$(DATABASE_URL) \
 	$(PYTHON) tmtrkr/server/server.py
 
 
 initdb:  ## apply all db migrations
-	PYTHONPATH="$(BASE_DIR)":${PYTHONPATH} \
-	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" \
+	PYTHONPATH=$(PYTHONPATH) \
+	TMTRKR_DATABASE_URL=$(DATABASE_URL) \
 	$(ALEMBIC) upgrade head
-	PYTHONPATH="$(BASE_DIR)":${PYTHONPATH} \
-	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" \
+	PYTHONPATH=$(PYTHONPATH) \
+	TMTRKR_DATABASE_URL=$(DATABASE_URL) \
 	$(ALEMBIC) current
 
 
 demodb: initdb  ## create demo db
-	PYTHONPATH="$(BASE_DIR)":${PYTHONPATH} \
-	TMTRKR_DATABASE_URL="sqlite:///$(DATABASE_URL)" \
+	PYTHONPATH=$(PYTHONPATH) \
+	TMTRKR_DATABASE_URL="$(DATABASE_URL)" \
 	$(PYTHON) tmtrkr/misc/demodb.py --only-if-empty
 
 
@@ -79,12 +80,12 @@ format:  # run source code formatters
 	$(FORMATTER_WWW_CSS) www/css/tmtrkr.css
 
 
-test: TEST_DATABASE_URL ?= $(shell mktemp)
+test: TEST_DATABASE_DIR := $(shell mktemp)
 test:  # run tests
-	PYTHONPATH="$(BASE_DIR)":${PYTHONPATH} \
-	TMTRKR_DATABASE_URL="sqlite:///$(TEST_DATABASE_URL)" \
+	PYTHONPATH=$(PYTHONPATH) \
+	TMTRKR_DATABASE_URL="sqlite:///$(TEST_DATABASE_DIR)" \
 	$(PYTHON) -u -m unittest -v --failfast
-	-rm -v "$(TEST_DATABASE_URL)"
+	-rm -v "$(TEST_DATABASE_DIR)"
 
 
 clean:  # cleanup python cache
